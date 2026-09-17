@@ -9,6 +9,8 @@ export type DbRideStatus =
 const TO_DB: Record<string, DbRideStatus> = {
   REQUESTED: "requested",
   requested: "requested",
+  searching: "requested",
+  SEARCHING: "requested",
   ACCEPTED: "accepted",
   ARRIVING: "accepted",
   accepted: "accepted",

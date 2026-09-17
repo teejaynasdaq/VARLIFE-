@@ -1,9 +1,9 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { initializeAuth, getAuth } from "firebase/auth";
-// @ts-ignore
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { initializeAuth, getAuth, Auth } from "firebase/auth";
+// @ts-ignore — RN persistence export is present at runtime in firebase/auth
 import { getReactNativePersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
@@ -15,24 +15,59 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase App (singleton guard)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+function looksLikePlaceholder(value?: string): boolean {
+  if (!value || !value.trim()) return true;
+  const v = value.toLowerCase();
+  return (
+    v.includes("abcd") ||
+    v.includes("your_") ||
+    v.includes("your-") ||
+    v.includes("placeholder") ||
+    v.includes("xxx") ||
+    v === "undefined"
+  );
+}
 
-// Initialize Firebase Auth with persistent AsyncStorage — safe to call multiple times
-let auth: ReturnType<typeof getAuth>;
+export function getFirebaseConfigErrors(): string[] {
+  const errors: string[] = [];
+  if (looksLikePlaceholder(firebaseConfig.apiKey)) {
+    errors.push("EXPO_PUBLIC_FIREBASE_API_KEY is missing or a placeholder");
+  }
+  if (looksLikePlaceholder(firebaseConfig.projectId)) {
+    errors.push("EXPO_PUBLIC_FIREBASE_PROJECT_ID is missing or a placeholder");
+  }
+  if (looksLikePlaceholder(firebaseConfig.appId)) {
+    errors.push(
+      "EXPO_PUBLIC_FIREBASE_APP_ID is missing or a placeholder — copy the Web appId from Firebase Console → Project settings → Your apps",
+    );
+  }
+  if (looksLikePlaceholder(firebaseConfig.messagingSenderId)) {
+    errors.push("EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID is missing or a placeholder");
+  }
+  return errors;
+}
+
+export const isFirebaseConfigured = getFirebaseConfigErrors().length === 0;
+
+if (!isFirebaseConfigured && __DEV__) {
+  console.warn(
+    "[Firebase] Config incomplete:\n- " + getFirebaseConfigErrors().join("\n- "),
+  );
+}
+
+const app: FirebaseApp =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+let auth: Auth;
 try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   });
 } catch {
-  // Auth already initialized (e.g. hot-reload) — grab the existing instance
   auth = getAuth(app);
 }
 
-// Initialize Cloud Firestore
-const db = getFirestore(app);
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
-// Initialize Firebase Storage
-const storage = getStorage(app);
-
-export { app, auth, db, storage };
+export { app, auth, db, storage, firebaseConfig };

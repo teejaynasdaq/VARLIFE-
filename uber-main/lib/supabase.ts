@@ -1,7 +1,7 @@
 /**
- * IMPORTANT: This file uses Firebase/Firestore exclusively. 
- * The 'supabase' naming is a legacy compatibility layer to avoid breaking existing imports.
- * There is NO actual Supabase backend connection here.
+ * Firebase/Firestore data layer (legacy filename: supabase.ts).
+ * Kept so existing `@/lib/supabase` imports keep working.
+ * There is NO live Supabase client here — Auth/DB/Storage are Firebase.
  */
 import {
   doc,
@@ -29,7 +29,14 @@ export const clerkIdToUuid = (id: string): string => id;
 
 // Connection check helper
 export const checkConnection = async (): Promise<boolean> => {
-  return true;
+  try {
+    // Lightweight connectivity probe against Firestore
+    await getDocs(query(collection(db, "users"), limit(1)));
+    return true;
+  } catch (err) {
+    console.error("[Firebase] Connection check failed:", err);
+    return false;
+  }
 };
 
 // Storage upload re-implementation
@@ -418,8 +425,9 @@ export const createRide = async (rideData: {
   const payload = {
     // Original fields for compatibility
     id: rideRef.id,
+    user_id: rideData.user_id,
     rider_id: rideData.user_id,
-    status: "searching", // Changed to searching per requirements
+    status: "requested",
     pickup_address: rideData.pickup_address,
     pickup_lat: rideData.pickup_lat,
     pickup_lng: rideData.pickup_lng,
