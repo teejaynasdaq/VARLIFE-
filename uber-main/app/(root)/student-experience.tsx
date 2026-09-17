@@ -36,6 +36,30 @@ const CATEGORIES = [
   { id: "campus", name: "Campus", icon: "school" },
 ];
 
+const FALLBACK_OFFERS = [
+  {
+    id: "local-ride-10",
+    title: "10% off campus rides",
+    description: "Student fare on VAR Go trips that start or end near campus.",
+    category: "rides",
+    discount_percent: 10,
+  },
+  {
+    id: "local-coffee",
+    title: "Cafe partner perk",
+    description: "Flash your verified student status for partner cafe deals.",
+    category: "coffee",
+    discount_percent: 15,
+  },
+  {
+    id: "local-campus",
+    title: "Campus late-night pool",
+    description: "Shared rides after late lectures at a student rate.",
+    category: "campus",
+    discount_percent: 12,
+  },
+];
+
 export default function StudentExperience() {
   const { user } = useAuth();
   const [offers, setOffers] = useState<any[]>([]);
@@ -70,6 +94,8 @@ export default function StudentExperience() {
       const verification = await getStudentVerificationStatus(user.id);
       if (verification?.status) {
         setVerificationStatus(verification.status);
+      } else if (user.student_verification_status) {
+        setVerificationStatus(user.student_verification_status);
       }
 
       const { data: offersData, error } = await supabase
@@ -78,8 +104,14 @@ export default function StudentExperience() {
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setOffers(offersData || []);
+      if (error) {
+        console.warn("[StudentHub] offers query:", error);
+        setOffers(FALLBACK_OFFERS);
+      } else if (!offersData || offersData.length === 0) {
+        setOffers(FALLBACK_OFFERS);
+      } else {
+        setOffers(offersData);
+      }
 
       const { data: savedData } = await supabase
         .from("student_saved_offers")
@@ -91,6 +123,7 @@ export default function StudentExperience() {
       }
     } catch (err) {
       console.error("Error fetching student data:", err);
+      setOffers(FALLBACK_OFFERS);
     } finally {
       setLoading(false);
     }
@@ -128,15 +161,16 @@ export default function StudentExperience() {
 
     setVerifying(true);
     try {
+      const uid = user.id;
       const cardUrl = await uploadImageToSupabase(
         cardPhotoUri,
         "verifications",
-        `${user.id}/card-${Date.now()}.jpg`,
+        `${uid}/card-${Date.now()}.jpg`,
       );
       const selfieUrl = await uploadImageToSupabase(
         selfiePhotoUri,
         "verifications",
-        `${user.id}/selfie-${Date.now()}.jpg`,
+        `${uid}/selfie-${Date.now()}.jpg`,
       );
 
       if (!cardUrl || !selfieUrl) {
@@ -144,7 +178,7 @@ export default function StudentExperience() {
       }
 
       await submitStudentVerification({
-        user_id: user.clerk_id ?? user.id,
+        user_id: uid,
         institution,
         student_number: studentNumber.trim() || undefined,
         student_email: studentEmail.trim().toLowerCase(),
@@ -175,17 +209,19 @@ export default function StudentExperience() {
       if (savedOffers.has(offerId)) {
         await supabase
           .from("student_saved_offers")
-          .delete()
-          .match({ user_id: user.id, offer_id: offerId });
+          .match({ user_id: user.id, offer_id: offerId })
+          .delete();
         setSavedOffers((prev) => {
           const next = new Set(prev);
           next.delete(offerId);
           return next;
         });
       } else {
-        await supabase
-          .from("student_saved_offers")
-          .insert({ user_id: user.id, offer_id: offerId });
+        await supabase.from("student_saved_offers").insert({
+          id: `${user.id}_${offerId}`,
+          user_id: user.id,
+          offer_id: offerId,
+        });
         setSavedOffers((prev) => new Set(prev).add(offerId));
       }
     } catch (err) {
@@ -194,13 +230,16 @@ export default function StudentExperience() {
   };
 
   const filteredOffers = offers.filter((offer) => {
-    const matchesCategory =
-      activeCategory === "all" ||
-      activeCategory === "saved" ||
-      offer.category === activeCategory;
     const matchesSearch =
       offer.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       offer.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeCategory === "saved") {
+      return savedOffers.has(offer.id) && matchesSearch;
+    }
+
+    const matchesCategory =
+      activeCategory === "all" || offer.category === activeCategory;
     return matchesCategory && matchesSearch;
   });
 
@@ -208,10 +247,21 @@ export default function StudentExperience() {
     inst.toLowerCase().includes(institutionSearch.toLowerCase()),
   );
 
+  const Header = ({ title }: { title: string }) => (
+    <View className="px-5 pt-2 flex-row items-center mb-6">
+      <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <Ionicons name="chevron-back" size={28} color="white" />
+      </TouchableOpacity>
+      <Text className="text-white text-xl font-JakartaExtraBold tracking-[2px]">
+        {title}
+      </Text>
+    </View>
+  );
+
   if (loading) {
     return (
       <View className="flex-1 bg-black justify-center items-center">
-        <ActivityIndicator size="large" color="#1C6EF2" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
       </View>
     );
   }
@@ -219,29 +269,26 @@ export default function StudentExperience() {
   if (!isStudent) {
     return (
       <SafeAreaView className="flex-1 bg-black">
-        <View className="px-5 pt-2 flex-row items-center mb-6">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Ionicons name="chevron-back" size={28} color="white" />
-          </TouchableOpacity>
-          <Text className="text-white text-xl font-JakartaExtraBold">
-            VARLIFE Students
-          </Text>
-        </View>
+        <Header title="VARLIFE Students" />
 
         {verificationStatus === "pending" ? (
           <View className="flex-1 px-5 justify-center items-center">
-            <Ionicons name="time-outline" size={80} color="#1C6EF2" />
+            <View className="w-24 h-24 rounded-full bg-neutral-900 border border-neutral-800 items-center justify-center mb-2">
+              <Ionicons name="time-outline" size={48} color="white" />
+            </View>
             <Text className="text-white text-2xl font-JakartaExtraBold mt-6 text-center">
               Verification Pending
             </Text>
             <Text className="text-neutral-400 text-base font-JakartaMedium text-center mt-4 px-6 leading-6">
-              We're reviewing your student card and selfie. You'll receive a
+              We are reviewing your student card and selfie. You will get a
               notification once approved.
             </Text>
           </View>
         ) : verificationStatus === "rejected" ? (
           <View className="flex-1 px-5 justify-center items-center">
-            <Ionicons name="close-circle-outline" size={80} color="#FF3B30" />
+            <View className="w-24 h-24 rounded-full bg-neutral-900 border border-neutral-800 items-center justify-center">
+              <Ionicons name="close-circle-outline" size={48} color="#F56565" />
+            </View>
             <Text className="text-white text-2xl font-JakartaExtraBold mt-6 text-center">
               Verification Declined
             </Text>
@@ -259,7 +306,9 @@ export default function StudentExperience() {
           </View>
         ) : !showVerifyForm ? (
           <View className="flex-1 px-5 justify-center items-center">
-            <Ionicons name="school" size={80} color="#1C6EF2" />
+            <View className="w-24 h-24 rounded-full bg-neutral-900 border border-neutral-800 items-center justify-center">
+              <Ionicons name="school" size={48} color="white" />
+            </View>
             <Text className="text-white text-3xl font-JakartaExtraBold mt-6 text-center">
               Student Exclusive
             </Text>
@@ -400,7 +449,7 @@ export default function StudentExperience() {
               onPress={() => setShowVerifyForm(false)}
               className="mt-5 py-2 items-center mb-10"
             >
-              <Text className="text-neutral-500 font-JakartaBold text-sm uppercase">
+              <Text className="text-neutral-500 font-JakartaBold text-sm uppercase tracking-widest">
                 Cancel
               </Text>
             </TouchableOpacity>
@@ -412,7 +461,7 @@ export default function StudentExperience() {
             >
               <SafeAreaView className="flex-1 bg-black/95 justify-end">
                 <View className="bg-neutral-950 border-t border-neutral-900 rounded-t-[32px] h-[80%] px-5 pt-6">
-                  <View className="flex-row justify-between items-center mb-6">
+                  <View className="flex-row justify-between items-center mb-4">
                     <Text className="text-white text-xl font-JakartaExtraBold">
                       Select Institution
                     </Text>
@@ -422,6 +471,16 @@ export default function StudentExperience() {
                       <Ionicons name="close-circle" size={28} color="#666" />
                     </TouchableOpacity>
                   </View>
+                  <View className="flex-row items-center bg-neutral-900 rounded-full px-4 py-3 mb-4">
+                    <Ionicons name="search" size={18} color="#666" />
+                    <TextInput
+                      placeholder="Search institutions..."
+                      placeholderTextColor="#666"
+                      className="flex-1 text-white font-JakartaMedium ml-3"
+                      value={institutionSearch}
+                      onChangeText={setInstitutionSearch}
+                    />
+                  </View>
                   <FlatList
                     data={filteredInstitutions}
                     keyExtractor={(item) => item}
@@ -430,6 +489,7 @@ export default function StudentExperience() {
                         onPress={() => {
                           setInstitution(item);
                           setShowInstitutionSelector(false);
+                          setInstitutionSearch("");
                         }}
                         className="py-4 border-b border-neutral-900"
                       >
@@ -450,12 +510,12 @@ export default function StudentExperience() {
 
   return (
     <SafeAreaView className="flex-1 bg-black">
-      <View className="px-5 pt-2 pb-4 flex-row items-center justify-between border-b border-neutral-900">
+      <View className="px-5 pt-2 pb-4 flex-row items-center justify-between border-b border-white/5">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-JakartaExtraBold">
+          <Text className="text-white text-xl font-JakartaExtraBold tracking-[2px]">
             Student Hub
           </Text>
         </View>
@@ -463,14 +523,27 @@ export default function StudentExperience() {
           <Ionicons
             name={activeCategory === "saved" ? "heart" : "heart-outline"}
             size={24}
-            color="#FF3B30"
+            color={activeCategory === "saved" ? "white" : "#888"}
           />
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
+        <View className="mx-5 mt-5 mb-2 rounded-3xl bg-neutral-900 border border-neutral-800 p-5">
+          <Text className="text-white text-lg font-JakartaExtraBold">
+            Verified student
+          </Text>
+          <Text className="text-neutral-400 font-JakartaMedium text-sm mt-2 leading-5">
+            Exclusive campus deals and ride discounts for your account.
+          </Text>
+        </View>
+
         <View className="px-5 py-4">
-          <View className="flex-row items-center bg-neutral-900 rounded-full px-4 py-3">
+          <View className="flex-row items-center bg-neutral-900 rounded-full px-4 py-3 border border-neutral-800">
             <Ionicons name="search" size={20} color="#666" />
             <TextInput
               placeholder="Search offers..."
@@ -512,8 +585,8 @@ export default function StudentExperience() {
             {activeCategory === "saved" ? "Saved Deals" : "Student Deals"}
           </Text>
           {filteredOffers.length === 0 ? (
-            <View className="py-12 items-center">
-              <Ionicons name="basket-outline" size={48} color="#333" />
+            <View className="py-12 items-center rounded-3xl border border-neutral-900 bg-neutral-950">
+              <Ionicons name="basket-outline" size={48} color="#444" />
               <Text className="text-neutral-500 font-JakartaBold mt-4">
                 No offers found
               </Text>
@@ -522,8 +595,11 @@ export default function StudentExperience() {
             filteredOffers.map((offer) => (
               <View
                 key={offer.id}
-                className="bg-neutral-900/60 border border-neutral-900 rounded-3xl p-4 mb-4 flex-row items-center"
+                className="bg-neutral-900/80 border border-neutral-800 rounded-3xl p-4 mb-4 flex-row items-center"
               >
+                <View className="w-12 h-12 rounded-2xl bg-black border border-neutral-800 items-center justify-center mr-4">
+                  <Ionicons name="pricetag-outline" size={20} color="white" />
+                </View>
                 <View className="flex-1">
                   <Text className="text-white font-JakartaBold text-base">
                     {offer.title}
@@ -537,8 +613,8 @@ export default function StudentExperience() {
                     </Text>
                   ) : null}
                   {offer.discount_percent ? (
-                    <View className="bg-white/10 px-2 py-0.5 rounded-full self-start mt-2">
-                      <Text className="text-white text-[10px] font-JakartaBold">
+                    <View className="bg-white px-2 py-0.5 rounded-full self-start mt-2">
+                      <Text className="text-black text-[10px] font-JakartaBold">
                         {offer.discount_percent}% OFF
                       </Text>
                     </View>
@@ -548,7 +624,7 @@ export default function StudentExperience() {
                   <Ionicons
                     name={savedOffers.has(offer.id) ? "heart" : "heart-outline"}
                     size={22}
-                    color={savedOffers.has(offer.id) ? "#FF3B30" : "#888"}
+                    color={savedOffers.has(offer.id) ? "white" : "#888"}
                   />
                 </TouchableOpacity>
               </View>

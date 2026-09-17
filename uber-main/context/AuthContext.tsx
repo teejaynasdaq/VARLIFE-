@@ -101,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         phone: profileData.phone,
         profile_image_url: profileData.profile_image_url,
         auth_provider: profileData.auth_provider,
+        student_verification_status: profileData.student_verification_status ?? "none",
         user_metadata: {
           full_name: profileData.full_name,
           first_name: profileData.first_name,

@@ -1,7 +1,7 @@
 /**
  * Firebase/Firestore data layer (legacy filename: supabase.ts).
  * Kept so existing `@/lib/supabase` imports keep working.
- * There is NO live Supabase client here — Auth/DB/Storage are Firebase.
+ * There is NO live Supabase client here ï¿½ Auth/DB/Storage are Firebase.
  */
 import {
   doc,
@@ -82,6 +82,12 @@ class SupabaseQueryBuilder {
     let f = field;
     if (field === "id") f = "id";
     this.filters.push({ field: f, operator: "==", value });
+    return this;
+  }
+  match(obj: Record<string, any>) {
+    for (const [field, value] of Object.entries(obj || {})) {
+      this.eq(field, value);
+    }
     return this;
   }
 

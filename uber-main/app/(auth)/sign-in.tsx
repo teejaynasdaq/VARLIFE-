@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Alert, ScrollView, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigured, getFirebaseConfigErrors } from "@/lib/firebase";
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import OAuth from "@/components/OAuth";
@@ -18,6 +18,13 @@ const SignIn = () => {
   const onSignInPress = useCallback(async () => {
     if (!form.email || !form.password) {
       Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
+    if (!isFirebaseConfigured) {
+      Alert.alert(
+        "Firebase not configured",
+        getFirebaseConfigErrors().join("\n")
+      );
       return;
     }
     setLoading(true);

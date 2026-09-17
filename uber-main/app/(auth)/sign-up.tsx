@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigured, getFirebaseConfigErrors } from "@/lib/firebase";
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import OAuth from "@/components/OAuth";
