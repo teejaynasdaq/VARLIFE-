@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+
+    match /vehicles/{driverId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(driverId);
+    }
+
+    match /licenses/{driverId}/{allPaths=**} {
+      allow read, write: if isOwner(driverId);
+    }
+
+    match /driver_licenses/{driverId}/{allPaths=**} {
+      allow read, write: if isOwner(driverId);
+    }
+  }
+}

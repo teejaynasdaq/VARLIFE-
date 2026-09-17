@@ -1,0 +1,14 @@
+# A string used to distinguish different Supabase projects on the same host.
+project_id = "gksfzvbfvnimrujrckwo"
+
+[api]
+enabled = true
+
+[functions.veriff-webhook]
+verify_jwt = false
+
+[functions.veriff-start-verification]
+verify_jwt = true
+
+[functions.veriff-poll-status]
+verify_jwt = true

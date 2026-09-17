@@ -1,0 +1,121 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── helpers ──────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ─── users ────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // ─── drivers ──────────────────────────────────────────────────────────────
+    match /drivers/{driverId} {
+      allow read: if true;
+      allow create, update: if isOwner(driverId);
+      allow delete: if false;
+    }
+
+    // ─── rides ────────────────────────────────────────────────────────────────
+    match /rides/{rideId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() &&
+        (resource.data.user_id == request.auth.uid ||
+         resource.data.driver_id == request.auth.uid ||
+         request.resource.data.driver_id == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // ─── ride_negotiations ────────────────────────────────────────────────────
+    match /ride_negotiations/{negId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // ─── messages ─────────────────────────────────────────────────────────────
+    match /messages/{msgId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.sender_id == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ─── payments ─────────────────────────────────────────────────────────────
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ─── vehicle_details ──────────────────────────────────────────────────────
+    match /vehicle_details/{driverId} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(driverId);
+      allow delete: if false;
+    }
+
+    // ─── bank_details ─────────────────────────────────────────────────────────
+    match /bank_details/{driverId} {
+      allow read, write: if isOwner(driverId);
+    }
+
+    // ─── emergency_contacts ───────────────────────────────────────────────────
+    match /emergency_contacts/{contactId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ─── ride_ratings ─────────────────────────────────────────────────────────
+    match /ride_ratings/{ratingId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.rater_id == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ─── saved_locations ──────────────────────────────────────────────────────
+    match /saved_locations/{locationId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ─── student_offers ───────────────────────────────────────────────────────
+    match /student_offers/{offerId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ─── student_saved_offers ─────────────────────────────────────────────────
+    match /student_saved_offers/{docId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ─── safety_logs (write-only for safety updates) ──────────────────────────
+    match /safety_logs/{logId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if false;
+    }
+
+    // ─── deny everything else ─────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
