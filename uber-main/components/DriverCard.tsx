@@ -85,7 +85,8 @@ const DriverCard = ({
               {status === "in_trip" ? "En route" : eta}
             </Text>
           </View>
-        </View>        {/* Driver Info Row */}
+        </View>{" "}
+        {/* Driver Info Row */}
         <View className="flex-row items-center justify-between mb-5">
           <View className="flex-row items-center flex-1 mr-2">
             <View className="w-14 h-14 rounded-full bg-[#1E1E1E] border border-[#2A2A2A] overflow-hidden items-center justify-center">
@@ -99,7 +100,10 @@ const DriverCard = ({
               )}
             </View>
             <View className="ml-3 flex-1">
-              <Text className="text-white text-base font-JakartaBold" numberOfLines={1}>
+              <Text
+                className="text-white text-base font-JakartaBold"
+                numberOfLines={1}
+              >
                 {driver.first_name || "Driver"}
               </Text>
               <View className="flex-row items-center mt-0.5">
@@ -112,10 +116,16 @@ const DriverCard = ({
                   Level 04 Artist
                 </Text>
               </View>
-              <Text className="text-neutral-400 text-xs mt-0.5" numberOfLines={1}>
+              <Text
+                className="text-neutral-400 text-xs mt-0.5"
+                numberOfLines={1}
+              >
                 White Toyota Corolla
               </Text>
-              <Text className="text-neutral-500 text-[10px] font-JakartaMedium mt-0.5" numberOfLines={1}>
+              <Text
+                className="text-neutral-500 text-[10px] font-JakartaMedium mt-0.5"
+                numberOfLines={1}
+              >
                 {vehiclePlate || "ABC 123 MP"}
               </Text>
             </View>
@@ -123,6 +133,12 @@ const DriverCard = ({
 
           {/* Circular Actions */}
           <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={handleShare}
+              className="w-10 h-10 rounded-full bg-[#1E1E1E] border border-[#2A2A2A] items-center justify-center"
+            >
+              <Ionicons name="share-social" size={16} color="white" />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={handleCall}
               className="w-10 h-10 rounded-full bg-[#1E1E1E] border border-[#2A2A2A] items-center justify-center"
@@ -138,7 +154,6 @@ const DriverCard = ({
             </TouchableOpacity>
           </View>
         </View>
-
         {/* Pickup Spot Section */}
         {status === "arriving" && (
           <View className="mb-5">
@@ -147,7 +162,9 @@ const DriverCard = ({
                 Pickup spot
               </Text>
               <TouchableOpacity>
-                <Text className="text-white text-xs font-JakartaBold">View</Text>
+                <Text className="text-white text-xs font-JakartaBold">
+                  View
+                </Text>
               </TouchableOpacity>
             </View>
             <View className="flex-row bg-[#1E1E1E] rounded-2xl overflow-hidden border border-[#2A2A2A] p-3">
@@ -155,16 +172,22 @@ const DriverCard = ({
                 <Ionicons name="location" size={24} color="#FFF" />
               </View>
               <View className="flex-1 justify-center">
-                <Text className="text-white text-sm font-JakartaBold mb-0.5">Main Taxi Rank</Text>
-                <Text className="text-neutral-400 text-xs font-JakartaMedium mb-0.5">Bushbuckridge</Text>
-                <Text className="text-neutral-500 text-[10px] font-JakartaMedium" numberOfLines={2}>
+                <Text className="text-white text-sm font-JakartaBold mb-0.5">
+                  Main Taxi Rank
+                </Text>
+                <Text className="text-neutral-400 text-xs font-JakartaMedium mb-0.5">
+                  Bushbuckridge
+                </Text>
+                <Text
+                  className="text-neutral-500 text-[10px] font-JakartaMedium"
+                  numberOfLines={2}
+                >
                   Meet at the covered area near the taxi rank entrance.
                 </Text>
               </View>
             </View>
           </View>
         )}
-
         {/* Safety Button */}
         <TouchableOpacity
           onPress={() => router.push("/(root)/safety" as any)}

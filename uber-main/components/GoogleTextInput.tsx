@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Image,
@@ -47,6 +47,28 @@ const GoogleTextInput = ({
     getRideRecommendations(userId).then(setRecommendations);
   }, [userId]);
 
+  const fetchPredictions = useCallback(
+    async (input: string) => {
+      setLoading(true);
+      try {
+        const results = await googleMaps.searchPlaces(
+          input,
+          userLatitude || 0,
+          userLongitude || 0,
+        );
+        if (results) {
+          setPredictions(results);
+        }
+      } catch (error) {
+        console.error("Error fetching Google predictions:", error);
+        setPredictions([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userLatitude, userLongitude],
+  );
+
   useEffect(() => {
     if (query.length < 3) {
       setPredictions([]);
@@ -58,26 +80,7 @@ const GoogleTextInput = ({
     }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [query]);
-
-  const fetchPredictions = async (input: string) => {
-    setLoading(true);
-    try {
-      const results = await googleMaps.searchPlaces(
-        input,
-        userLatitude || 0,
-        userLongitude || 0,
-      );
-      if (results) {
-        setPredictions(results);
-      }
-    } catch (error) {
-      console.error("Error fetching Google predictions:", error);
-      setPredictions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [query, fetchPredictions]);
 
   const selectLocation = (
     latitude: number,
@@ -140,65 +143,59 @@ const GoogleTextInput = ({
           className={`${inlinePredictions ? "relative mt-3" : "absolute top-full mt-2"} left-0 right-0 max-h-96 rounded-2xl bg-[#1A1A1A] shadow-lg border border-[#2A2A2A] z-[100] overflow-hidden`}
           keyboardShouldPersistTaps="handled"
         >
-          {/* RECENT SEARCHES */}
-          <Text className="px-5 pt-4 pb-2 text-[10px] font-JakartaBold text-[#888] uppercase tracking-widest">
-            Recent Searches
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="px-5 mb-4"
-            contentContainerStyle={{ gap: 8 }}
-          >
-            {[
-              { id: "rec-1", label: "Dwarsloop Mall", address: "Dwarsloop Mall, Bushbuckridge", latitude: -24.8083, longitude: 31.0664 },
-              { id: "rec-2", label: "Hazyview", address: "Hazyview Village, Hazyview", latitude: -25.0408, longitude: 31.1275 },
-              { id: "rec-3", label: "Nelspruit", address: "Nelspruit City Centre, Nelspruit", latitude: -25.4745, longitude: 30.9703 },
-            ].map((rec) => (
-              <TouchableOpacity
-                key={rec.id}
-                onPress={() => selectLocation(rec.latitude, rec.longitude, rec.address)}
-                className="bg-[#2A2A2A] px-4 py-2 rounded-full border border-[#3A3A3A]"
-              >
-                <Text className="text-white text-xs font-JakartaBold">{rec.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* SUGGESTIONS */}
-          <Text className="px-5 pt-2 pb-2 text-[10px] font-JakartaBold text-[#888] uppercase tracking-widest">
-            Suggestions
-          </Text>
-          {[
-            { id: "sug-1", label: "Dwarsloop Mall", desc: "Bushbuckridge", dist: "8.4 km", latitude: -24.8083, longitude: 31.0664 },
-            { id: "sug-2", label: "Bushbuckridge Plaza", desc: "Bushbuckridge", dist: "3.1 km", latitude: -24.8398, longitude: 31.0425 },
-            { id: "sug-3", label: "Hazyview Village", desc: "Hazyview", dist: "23.7 km", latitude: -25.0408, longitude: 31.1275 },
-            { id: "sug-4", label: "Nelspruit City Centre", desc: "Nelspruit", dist: "47.2 km", latitude: -25.4745, longitude: 30.9703 },
-            { id: "sug-5", label: "White River Crossing", desc: "White River", dist: "39.8 km", latitude: -25.3312, longitude: 31.0125 },
-          ].map((rec) => (
-            <TouchableOpacity
-              key={rec.id}
-              className="px-6 py-4 border-b border-[#2A2A2A]/40 flex-row items-center justify-between"
-              onPress={() => selectLocation(rec.latitude, rec.longitude, `${rec.label}, ${rec.desc}`)}
-            >
-              <View className="flex-row items-center flex-1 mr-3">
-                <View className="w-9 h-9 rounded-full bg-[#1E1E1E] items-center justify-center mr-4 border border-[#2A2A2A]">
-                  <Ionicons name="location-sharp" size={16} color="#888" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-JakartaBold text-white" numberOfLines={1}>
-                    {rec.label}
-                  </Text>
-                  <Text className="text-xs text-[#888] mt-0.5" numberOfLines={1}>
-                    {rec.desc}
-                  </Text>
-                </View>
-              </View>
-              <Text className="text-xs font-JakartaBold text-[#888]">
-                {rec.dist}
+          {recommendations.length === 0 ? (
+            <Text className="px-5 py-6 text-center text-xs text-[#666] font-JakartaMedium">
+              Start typing to search for a location
+            </Text>
+          ) : (
+            <>
+              <Text className="px-5 pt-4 pb-2 text-[10px] font-JakartaBold text-[#888] uppercase tracking-widest">
+                Suggested for you
               </Text>
-            </TouchableOpacity>
-          ))}
+              {recommendations.map((rec) => (
+                <TouchableOpacity
+                  key={rec.id}
+                  className="px-6 py-4 border-b border-[#2A2A2A]/40 flex-row items-center justify-between"
+                  onPress={() => handleRecommendationPress(rec)}
+                >
+                  <View className="flex-row items-center flex-1 mr-3">
+                    <View className="w-9 h-9 rounded-full bg-[#1E1E1E] items-center justify-center mr-4 border border-[#2A2A2A]">
+                      <Ionicons
+                        name={
+                          rec.icon === "home"
+                            ? "home"
+                            : rec.icon === "school"
+                              ? "school"
+                              : rec.icon === "time"
+                                ? "time"
+                                : "star"
+                        }
+                        size={16}
+                        color="#888"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text
+                        className="text-sm font-JakartaBold text-white"
+                        numberOfLines={1}
+                      >
+                        {rec.label}
+                      </Text>
+                      <Text
+                        className="text-xs text-[#888] mt-0.5"
+                        numberOfLines={1}
+                      >
+                        {rec.address}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="text-xs font-JakartaBold text-[#888] capitalize">
+                    {rec.type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
         </ScrollView>
       )}
 

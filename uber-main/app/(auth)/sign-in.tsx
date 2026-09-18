@@ -1,14 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { useCallback, useState } from "react";
-import { Alert, ScrollView, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  Alert,
+  ScrollView,
+  Text,
+  View,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 
-import { auth, isFirebaseConfigured, getFirebaseConfigErrors } from "@/lib/firebase";
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import OAuth from "@/components/OAuth";
 import { useAuth } from "@/context/AuthContext";
+import {
+  auth,
+  isFirebaseConfigured,
+  getFirebaseConfigErrors,
+} from "@/lib/firebase";
 
 const SignIn = () => {
   const { enterGuestMode } = useAuth();
@@ -23,7 +38,7 @@ const SignIn = () => {
     if (!isFirebaseConfigured) {
       Alert.alert(
         "Firebase not configured",
-        getFirebaseConfigErrors().join("\n")
+        getFirebaseConfigErrors().join("\n"),
       );
       return;
     }
@@ -35,7 +50,7 @@ const SignIn = () => {
       console.error("[SignIn]", err);
       Alert.alert(
         "Sign In Error",
-        err.message || "Failed to sign in. Please check your credentials."
+        err.message || "Failed to sign in. Please check your credentials.",
       );
     } finally {
       setLoading(false);
@@ -51,7 +66,7 @@ const SignIn = () => {
     if (!form.email) {
       Alert.alert(
         "Reset Password",
-        "Enter your email address above, then tap Forgot Password."
+        "Enter your email address above, then tap Forgot Password.",
       );
       return;
     }
@@ -59,23 +74,26 @@ const SignIn = () => {
       await sendPasswordResetEmail(auth, form.email.trim());
       Alert.alert(
         "Password Reset Sent",
-        "Check your inbox for a password reset link."
+        "Check your inbox for a password reset link.",
       );
     } catch (err: any) {
       console.error("[ForgotPassword]", err);
       Alert.alert(
         "Error",
-        err.message || "Could not send reset email. Please try again."
+        err.message || "Could not send reset email. Please try again.",
       );
     }
   }, [form.email]);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView className="flex-1 bg-black" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        className="flex-1 bg-black"
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="flex-1 bg-black px-8 py-10 min-h-screen">
           <View className="flex flex-row justify-between items-center mt-10 mb-16">
             <TouchableOpacity onPress={() => router.back()}>

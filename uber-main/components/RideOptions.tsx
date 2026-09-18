@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -64,6 +64,16 @@ const RideOptions = ({
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [recommended, setRecommended] = useState(0);
 
+  // Keep latest values in refs so the effect below can read them without
+  // needing them as dependencies (which would re-trigger the fare calc
+  // whenever the parent passes a new inline onPriceChange).
+  const negotiatedPriceRef = useRef(negotiatedPrice);
+  const onPriceChangeRef = useRef(onPriceChange);
+  useEffect(() => {
+    negotiatedPriceRef.current = negotiatedPrice;
+    onPriceChangeRef.current = onPriceChange;
+  }, [negotiatedPrice, onPriceChange]);
+
   useEffect(() => {
     if (!routeTime || !routeDistance) return;
     const distanceKm = routeDistance / 1000;
@@ -82,7 +92,9 @@ const RideOptions = ({
       setPrices(next);
       const rec = next.lite ?? next.go ?? 0;
       setRecommended(rec);
-      if (!negotiatedPrice && rec > 0) onPriceChange(Math.round(rec));
+      if (!negotiatedPriceRef.current && rec > 0) {
+        onPriceChangeRef.current(Math.round(rec));
+      }
     })();
   }, [routeTime, routeDistance]);
 
@@ -98,7 +110,6 @@ const RideOptions = ({
 
   return (
     <View className="flex-1 bg-black">
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -211,7 +222,9 @@ const RideOptions = ({
           onPress={() => onPaymentChange("cash")}
           style={[
             styles.paymentBtn,
-            paymentMethod === "cash" ? styles.paymentBtnActive : styles.paymentBtnInactive,
+            paymentMethod === "cash"
+              ? styles.paymentBtnActive
+              : styles.paymentBtnInactive,
           ]}
         >
           <Ionicons
@@ -234,7 +247,9 @@ const RideOptions = ({
           onPress={() => onPaymentChange("payshap")}
           style={[
             styles.paymentBtn,
-            paymentMethod === "payshap" ? styles.paymentBtnActive : styles.paymentBtnInactive,
+            paymentMethod === "payshap"
+              ? styles.paymentBtnActive
+              : styles.paymentBtnInactive,
           ]}
         >
           <Ionicons
@@ -268,7 +283,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     shadowColor: "#fff",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
   },
   paymentBtn: {

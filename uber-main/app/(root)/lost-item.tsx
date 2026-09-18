@@ -31,9 +31,7 @@ const LostItemScreen = () => {
         const rides = await getRideHistory(user.clerk_id ?? user.id);
         setTrips(
           (rides ?? [])
-            .filter(
-              (r: any) => (r.status ?? "").toLowerCase() === "completed",
-            )
+            .filter((r: any) => (r.status ?? "").toLowerCase() === "completed")
             .slice(0, 10),
         );
       } catch {

@@ -1,5 +1,6 @@
-import { Image, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Text, View } from "react-native";
+
 import { formatDate, formatTime } from "@/lib/utils";
 import { Ride } from "@/types/type";
 
@@ -16,12 +17,18 @@ const RideCard = ({ ride }: { ride: Ride }) => {
           </View>
           <View className="flex-1">
             <View className="mb-4">
-              <Text className="text-white font-JakartaMedium text-sm" numberOfLines={2}>
+              <Text
+                className="text-white font-JakartaMedium text-sm"
+                numberOfLines={2}
+              >
                 {ride.pickup_address}
               </Text>
             </View>
             <View>
-              <Text className="text-white font-JakartaMedium text-sm" numberOfLines={2}>
+              <Text
+                className="text-white font-JakartaMedium text-sm"
+                numberOfLines={2}
+              >
                 {ride.dropoff_address}
               </Text>
             </View>
@@ -34,8 +41,12 @@ const RideCard = ({ ride }: { ride: Ride }) => {
             <Text className="text-sm font-JakartaMedium text-neutral-500">
               Date & Time
             </Text>
-            <Text className="text-sm font-JakartaBold text-white" numberOfLines={1}>
-              {formatDate(ride.created_at)}, {formatTime(ride.duration_minutes || 0)}
+            <Text
+              className="text-sm font-JakartaBold text-white"
+              numberOfLines={1}
+            >
+              {formatDate(ride.created_at)},{" "}
+              {formatTime(ride.duration_minutes || 0)}
             </Text>
           </View>
 
@@ -71,8 +82,8 @@ const RideCard = ({ ride }: { ride: Ride }) => {
                 ride.status === "COMPLETED"
                   ? "text-white"
                   : ride.status === "CANCELLED"
-                  ? "text-red-500"
-                  : "text-neutral-400"
+                    ? "text-red-500"
+                    : "text-neutral-400"
               }`}
             >
               {ride.status}

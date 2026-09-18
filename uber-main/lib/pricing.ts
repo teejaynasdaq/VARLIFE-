@@ -40,7 +40,6 @@ export async function getPricingConfig(): Promise<PricingConfig> {
   return cachedConfig;
 }
 
-
 export async function calculateFare(params: {
   distanceKm: number;
   durationMinutes: number;

@@ -1,8 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, {
-  BottomSheetView,
-  BottomSheetScrollView,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as Location from "expo-location";
 import { useRouter, type Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -144,6 +141,16 @@ export default function DriverHomeScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const mapRef = useRef<MapView>(null);
 
+  // Keep latest `user` available inside the location-watch callback below,
+  // which is set up once on mount — without this, the callback would keep
+  // reading the `user` value (often still null, since auth state resolves
+  // asynchronously) captured at that first render, and driver location
+  // updates would silently never be written to the database.
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const snapPoints = useMemo(
     () =>
       activeTrip ? ["20%", "55%"] : isOnline ? ["15%", "45%", "88%"] : ["15%"],
@@ -170,7 +177,7 @@ export default function DriverHomeScreen() {
         },
         (newLoc) => {
           setLocation(newLoc);
-          if (user) {
+          if (userRef.current) {
             supabase
               .from("drivers")
               .update({
@@ -178,7 +185,7 @@ export default function DriverHomeScreen() {
                 current_lng: newLoc.coords.longitude,
                 updated_at: new Date().toISOString(),
               })
-              .eq("id", user.id)
+              .eq("id", userRef.current.id)
               .then(() => {});
           }
         },
@@ -194,6 +201,26 @@ export default function DriverHomeScreen() {
       hdgSub?.remove();
     };
   }, []);
+
+  // ── Fetch route polyline ─────────────────────────────────────────────────
+  const fetchRoute = useCallback(
+    async (fromLat: number, fromLng: number, toLat: number, toLng: number) => {
+      if (!GOOGLE_MAPS_APIKEY) return;
+      try {
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&key=${GOOGLE_MAPS_APIKEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status === "OK" && data.routes.length > 0) {
+          setRouteCoords(
+            decodePolyline(data.routes[0].overview_polyline.points),
+          );
+        }
+      } catch (e) {
+        console.warn("[Driver] fetchRoute error:", e);
+      }
+    },
+    [],
+  );
 
   // ── Fetch driver data on mount ────────────────────────────────────────────
   useEffect(() => {
@@ -241,7 +268,8 @@ export default function DriverHomeScreen() {
 
       if (completed) {
         const sum = completed.reduce(
-          (acc: number, t: any) => acc + (t.driver_payout ?? t.final_price ?? 0),
+          (acc: number, t: any) =>
+            acc + (t.driver_payout ?? t.final_price ?? 0),
           0,
         );
         setTodayEarnings(sum);
@@ -271,49 +299,26 @@ export default function DriverHomeScreen() {
         );
       }
     })();
-  }, [user, router]);
+  }, [user, router, fetchRoute]);
 
   // ── Realtime verification guard ──────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    return subscribeToDriverVerification(
-      user.id,
-      (updated) => {
-        const verified = canDriverGoOnline(updated);
-        setIsVerified(verified);
-        if (!verified && isOnline) {
-          setIsOnline(false);
-          supabase
-            .from("drivers")
-            .update({ is_online: false, updated_at: new Date().toISOString() })
-            .eq("id", user.id);
-        }
-        if (!verified) {
-          router.replace("/(driver)/driver-verification" as Href);
-        }
+    return subscribeToDriverVerification(user.id, (updated) => {
+      const verified = canDriverGoOnline(updated);
+      setIsVerified(verified);
+      if (!verified && isOnline) {
+        setIsOnline(false);
+        supabase
+          .from("drivers")
+          .update({ is_online: false, updated_at: new Date().toISOString() })
+          .eq("id", user.id);
       }
-    );
+      if (!verified) {
+        router.replace("/(driver)/driver-verification" as Href);
+      }
+    });
   }, [user?.id, isOnline, router]);
-
-  // ── Fetch route polyline ─────────────────────────────────────────────────
-  const fetchRoute = useCallback(
-    async (fromLat: number, fromLng: number, toLat: number, toLng: number) => {
-      if (!GOOGLE_MAPS_APIKEY) return;
-      try {
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&key=${GOOGLE_MAPS_APIKEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.status === "OK" && data.routes.length > 0) {
-          setRouteCoords(
-            decodePolyline(data.routes[0].overview_polyline.points),
-          );
-        }
-      } catch (e) {
-        console.warn("[Driver] fetchRoute error:", e);
-      }
-    },
-    [],
-  );
 
   // ── Toggle Online / Offline ──────────────────────────────────────────────
   const toggleOnline = useCallback(async () => {

@@ -103,12 +103,14 @@ export const googleMaps = {
     originLon: number,
     destLat: number,
     destLon: number,
-    waypoints?: { latitude: number; longitude: number }[]
+    waypoints?: { latitude: number; longitude: number }[],
   ) => {
     try {
       let waypointsQuery = "";
       if (waypoints && waypoints.length > 0) {
-        const wpStr = waypoints.map((w) => `${w.latitude},${w.longitude}`).join("|");
+        const wpStr = waypoints
+          .map((w) => `${w.latitude},${w.longitude}`)
+          .join("|");
         waypointsQuery = `&waypoints=optimize:true|${wpStr}`;
       }
 

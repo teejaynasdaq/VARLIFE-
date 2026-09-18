@@ -1,17 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import * as SMS from "expo-sms";
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Alert, Animated, StyleSheet } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Animated,
+  StyleSheet,
+} from "react-native";
 
 import { supabase } from "@/lib/supabase";
 import { useRideStore } from "@/store/rideStore";
 
 const EmergencyButton = () => {
-  const { matchedDriver, origin, destination, userId } = useRideStore();
+  const { matchedDriver, origin, userId } = useRideStore();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
-  const pulseAnim = new Animated.Value(1);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (isEmergencyActive) {
@@ -32,7 +39,7 @@ const EmergencyButton = () => {
     } else {
       pulseAnim.setValue(1);
     }
-  }, [isEmergencyActive]);
+  }, [isEmergencyActive, pulseAnim]);
 
   const startRecording = async () => {
     try {
@@ -115,7 +122,9 @@ const EmergencyButton = () => {
         <Animated.View
           style={[
             styles.emergencyBtn,
-            isEmergencyActive ? styles.emergencyBtnActive : styles.emergencyBtnInactive,
+            isEmergencyActive
+              ? styles.emergencyBtnActive
+              : styles.emergencyBtnInactive,
             { transform: [{ scale: pulseAnim }] },
           ]}
         >

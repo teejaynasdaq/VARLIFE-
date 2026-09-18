@@ -1,14 +1,5 @@
 import React, { forwardRef } from "react";
-import {
-  TextInput,
-  View,
-  Text,
-  Image,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-} from "react-native";
+import { TextInput, View, Text, Image } from "react-native";
 
 import { InputFieldProps } from "@/types/type";
 
@@ -55,5 +46,7 @@ const InputField = forwardRef<TextInput, InputFieldProps>(
     );
   },
 );
+
+InputField.displayName = "InputField";
 
 export default InputField;

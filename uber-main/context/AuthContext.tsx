@@ -1,10 +1,3 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-} from "react";
 import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
@@ -12,6 +5,13 @@ import {
   deleteUser as firebaseDeleteUser,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
 import { auth, db } from "@/lib/firebase";
 import {
@@ -61,7 +61,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         userSnap = await getDoc(userRef);
       } catch (err) {
-        console.error("[AuthContext] Error fetching user " + fUser.uid + ":", err);
+        console.error(
+          "[AuthContext] Error fetching user " + fUser.uid + ":",
+          err,
+        );
         throw err;
       }
 
@@ -72,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const parts = (fUser.displayName || "").trim().split(/\s+/);
         const firstName = parts[0] || "VARLIFE";
         const lastName = parts.slice(1).join(" ") || "User";
-        
+
         profileData = {
           id: fUser.uid,
           email: fUser.email || "",
@@ -101,7 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         phone: profileData.phone,
         profile_image_url: profileData.profile_image_url,
         auth_provider: profileData.auth_provider,
-        student_verification_status: profileData.student_verification_status ?? "none",
+        student_verification_status:
+          profileData.student_verification_status ?? "none",
         user_metadata: {
           full_name: profileData.full_name,
           first_name: profileData.first_name,

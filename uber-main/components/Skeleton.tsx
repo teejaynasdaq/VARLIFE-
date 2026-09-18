@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
+import React, { useEffect, useRef } from "react";
+import { Animated, StyleSheet, ViewStyle, DimensionValue } from "react-native";
 
 interface SkeletonProps {
   width?: DimensionValue;
@@ -9,7 +9,7 @@ interface SkeletonProps {
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
-  width = '100%',
+  width = "100%",
   height = 20,
   borderRadius = 8,
   style,
@@ -29,23 +29,19 @@ export const Skeleton: React.FC<SkeletonProps> = ({
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
   }, [opacity]);
 
   return (
     <Animated.View
-      style={[
-        styles.skeleton,
-        { width, height, borderRadius, opacity },
-        style,
-      ]}
+      style={[styles.skeleton, { width, height, borderRadius, opacity }, style]}
     />
   );
 };
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: '#333333',
+    backgroundColor: "#333333",
   },
 });

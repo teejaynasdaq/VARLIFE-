@@ -1,10 +1,6 @@
 /** Maps between app-level status strings and live DB ride_status enum. */
 export type DbRideStatus =
-  | "requested"
-  | "accepted"
-  | "started"
-  | "completed"
-  | "cancelled";
+  "requested" | "accepted" | "started" | "completed" | "cancelled";
 
 const TO_DB: Record<string, DbRideStatus> = {
   REQUESTED: "requested",

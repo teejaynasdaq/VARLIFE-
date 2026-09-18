@@ -1,13 +1,9 @@
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+
 import { db } from "@/lib/firebase";
 
 export type DriverVerificationStatus =
-  | "pending"
-  | "processing"
-  | "verified"
-  | "rejected"
-  | "expired"
-  | "failed";
+  "pending" | "processing" | "verified" | "rejected" | "expired" | "failed";
 
 export interface DriverVerificationRecord {
   id: string;
@@ -36,7 +32,8 @@ export const VERIFICATION_STATUS_LABELS: Record<
   },
   processing: {
     title: "Verification In Progress",
-    message: "We're verifying your licence with Veriff. This usually takes a few minutes.",
+    message:
+      "We're verifying your licence with Veriff. This usually takes a few minutes.",
     icon: "hourglass-outline",
     color: "#1C6EF2",
   },
@@ -48,7 +45,8 @@ export const VERIFICATION_STATUS_LABELS: Record<
   },
   rejected: {
     title: "Verification Declined",
-    message: "Your licence could not be verified. Please upload clearer photos and try again.",
+    message:
+      "Your licence could not be verified. Please upload clearer photos and try again.",
     icon: "close-circle",
     color: "#FF3B30",
   },
@@ -60,17 +58,22 @@ export const VERIFICATION_STATUS_LABELS: Record<
   },
   failed: {
     title: "Verification Failed",
-    message: "We couldn't complete verification. Check your images and try again.",
+    message:
+      "We couldn't complete verification. Check your images and try again.",
     icon: "alert-circle",
     color: "#FF9500",
   },
 };
 
-export function isVerificationComplete(status: DriverVerificationStatus): boolean {
+export function isVerificationComplete(
+  status: DriverVerificationStatus,
+): boolean {
   return ["verified", "rejected", "expired", "failed"].includes(status);
 }
 
-export function canDriverGoOnline(driver: DriverVerificationRecord | null): boolean {
+export function canDriverGoOnline(
+  driver: DriverVerificationRecord | null,
+): boolean {
   return !!driver?.is_verified && driver.verification_status === "verified";
 }
 
@@ -125,7 +128,7 @@ export async function startVeriffVerification(params: {
 
   // Point to Firebase Cloud Function (HTTPS Trigger)
   const functionUrl = `https://us-central1-${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/veriffStartVerification`;
-  
+
   const response = await fetch(functionUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -143,7 +146,9 @@ export async function startVeriffVerification(params: {
 
   const data = await response.json();
   if (!response.ok || data.error) {
-    throw new Error(data.error || "Failed to start verification via Firebase Functions");
+    throw new Error(
+      data.error || "Failed to start verification via Firebase Functions",
+    );
   }
   return data;
 }
@@ -162,7 +167,10 @@ export async function pollVeriffStatus(
 
   const data = await response.json();
   if (!response.ok || data.error) {
-    throw new Error(data.error || "Failed to check verification status via Firebase Functions");
+    throw new Error(
+      data.error ||
+        "Failed to check verification status via Firebase Functions",
+    );
   }
   return {
     status: data.status as DriverVerificationStatus,

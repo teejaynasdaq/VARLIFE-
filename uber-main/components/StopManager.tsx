@@ -10,21 +10,12 @@ import {
   Platform,
 } from "react-native";
 
-import { googleMaps } from "@/lib/googleMaps";
 import { useRideStore } from "@/store/rideStore";
 
 import GoogleTextInput from "./GoogleTextInput";
 
 const StopManager = () => {
-  const {
-    stops,
-    addStop,
-    removeStop,
-    origin,
-    setPolylineCoords,
-    setDistanceKm,
-    setDurationMin,
-  } = useRideStore();
+  const { stops, addStop, removeStop } = useRideStore();
   const [showSearch, setShowSearch] = useState(false);
 
   const handleAddStop = async (loc: {

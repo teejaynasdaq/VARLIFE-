@@ -8,7 +8,14 @@ export default function RootLayout() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#000",
+        }}
+      >
         <ActivityIndicator size="large" color="#fff" />
       </View>
     );
@@ -19,7 +26,12 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000" } }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: "#000" },
+      }}
+    >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="student-experience" />
       <Stack.Screen name="student-verification" />

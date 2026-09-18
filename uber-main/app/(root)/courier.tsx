@@ -8,7 +8,6 @@ import {
   ScrollView,
   TextInput,
   Alert,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,7 +23,6 @@ const CourierScreen = () => {
     destination,
     setDestination,
     setIsCourier,
-    estimatedPrice,
     setEstimatedPrice,
   } = useRideStore();
 

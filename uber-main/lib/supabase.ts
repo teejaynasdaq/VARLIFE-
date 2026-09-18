@@ -10,7 +10,6 @@ import {
   getDocs,
   setDoc,
   updateDoc,
-  addDoc,
   deleteDoc,
   query,
   where,
@@ -20,6 +19,7 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 import { db, storage } from "@/lib/firebase";
 import { calculateFare, RIDE_TYPE_MULTIPLIERS } from "@/lib/pricing";
 import { toDbStatus } from "@/lib/rideStatus";
@@ -57,7 +57,9 @@ export const uploadImageToSupabase = async (
   }
 };
 
-export const ensureStorageBucket = async (bucketName: string): Promise<boolean> => {
+export const ensureStorageBucket = async (
+  bucketName: string,
+): Promise<boolean> => {
   return true;
 };
 
@@ -131,7 +133,6 @@ class SupabaseQueryBuilder {
     return this;
   }
 
-
   in(field: string, values: any[]) {
     this.filters.push({ field, operator: "in", value: values });
     return this;
@@ -149,14 +150,14 @@ class SupabaseQueryBuilder {
   }
 
   single() {
-    return this.execute().then(res => {
+    return this.execute().then((res) => {
       if (res.error) throw res.error;
       return { data: res.data ? res.data[0] || null : null, error: null };
     });
   }
 
   maybeSingle() {
-    return this.execute().then(res => {
+    return this.execute().then((res) => {
       return { data: res.data ? res.data[0] || null : null, error: null };
     });
   }
@@ -168,13 +169,19 @@ class SupabaseQueryBuilder {
         q = query(q, where(f.field, f.operator as any, f.value));
       }
       if (this.orderField) {
-        q = query(q, orderBy(this.orderField, this.orderAscending ? "asc" : "desc"));
+        q = query(
+          q,
+          orderBy(this.orderField, this.orderAscending ? "asc" : "desc"),
+        );
       }
       if (this.limitVal) {
         q = query(q, limit(this.limitVal));
       }
       const snap = await getDocs(q);
-      const results: any[] = snap.docs.map(docObj => ({ id: docObj.id, ...docObj.data() }));
+      const results: any[] = snap.docs.map((docObj) => ({
+        id: docObj.id,
+        ...docObj.data(),
+      }));
       return { data: results, error: null };
     } catch (err: any) {
       console.error("[Firestore Compat Builder] Query execution error:", err);
@@ -198,11 +205,12 @@ class SupabaseQueryBuilder {
       const results = [];
       for (const item of arr) {
         // If an explicit id/UID is passed in the item, use it as the Firestore document ID
-        const docId = item.id || item.driver_id || item.user_id || item.rider_id;
-        const docRef = docId 
-          ? doc(db, this.collectionName, docId) 
+        const docId =
+          item.id || item.driver_id || item.user_id || item.rider_id;
+        const docRef = docId
+          ? doc(db, this.collectionName, docId)
           : doc(collection(db, this.collectionName));
-        
+
         const payload = {
           id: docRef.id,
           ...item,
@@ -239,7 +247,10 @@ class SupabaseQueryBuilder {
       if (results.data) {
         for (const item of results.data) {
           const docRef = doc(db, this.collectionName, item.id);
-          await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
+          await updateDoc(docRef, {
+            ...data,
+            updated_at: new Date().toISOString(),
+          });
         }
       }
       return { data: results.data, error: null };
@@ -267,7 +278,11 @@ class SupabaseQueryBuilder {
 }
 
 class SupabaseChannel {
-  private callbacks: { table: string; event: string; callback: (payload: any) => void }[] = [];
+  private callbacks: {
+    table: string;
+    event: string;
+    callback: (payload: any) => void;
+  }[] = [];
   private unsubscribes: (() => void)[] = [];
 
   constructor(private name: string) {}
@@ -275,7 +290,7 @@ class SupabaseChannel {
   on(
     type: string,
     filter: { event: string; schema: string; table: string; filter?: string },
-    callback: (payload: any) => void
+    callback: (payload: any) => void,
   ) {
     this.callbacks.push({ table: filter.table, event: filter.event, callback });
     return this;
@@ -287,12 +302,21 @@ class SupabaseChannel {
       const unsub = onSnapshot(colRef, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           const docData = { id: change.doc.id, ...change.doc.data() };
-          
-          if (change.type === "added" && (cb.event === "INSERT" || cb.event === "*")) {
+
+          if (
+            change.type === "added" &&
+            (cb.event === "INSERT" || cb.event === "*")
+          ) {
             cb.callback({ eventType: "INSERT", new: docData });
-          } else if (change.type === "modified" && (cb.event === "UPDATE" || cb.event === "*")) {
+          } else if (
+            change.type === "modified" &&
+            (cb.event === "UPDATE" || cb.event === "*")
+          ) {
             cb.callback({ eventType: "UPDATE", new: docData });
-          } else if (change.type === "removed" && (cb.event === "DELETE" || cb.event === "*")) {
+          } else if (
+            change.type === "removed" &&
+            (cb.event === "DELETE" || cb.event === "*")
+          ) {
             cb.callback({ eventType: "DELETE", old: docData });
           }
         });
@@ -303,7 +327,7 @@ class SupabaseChannel {
   }
 
   unsubscribe() {
-    this.unsubscribes.forEach(unsub => unsub());
+    this.unsubscribes.forEach((unsub) => unsub());
     this.unsubscribes = [];
   }
 }
@@ -315,7 +339,7 @@ export const supabase = {
     if (channel && typeof channel.unsubscribe === "function") {
       channel.unsubscribe();
     }
-  }
+  },
 };
 
 // --- Repository Functions ---
@@ -465,7 +489,8 @@ export const createRide = async (rideData: {
 }) => {
   const distanceKm = rideData.distance_km ?? 0;
   const durationMin = rideData.duration_minutes ?? 0;
-  const multiplier = RIDE_TYPE_MULTIPLIERS[rideData.ride_type ?? "standard"] ?? 1.1;
+  const multiplier =
+    RIDE_TYPE_MULTIPLIERS[rideData.ride_type ?? "standard"] ?? 1.1;
 
   const fare = await calculateFare({
     distanceKm,
@@ -546,10 +571,10 @@ export const getRideHistory = async (userId: string) => {
   const ridesQuery = query(
     collection(db, "rides"),
     where("rider_id", "==", userId),
-    orderBy("requested_at", "desc")
+    orderBy("requested_at", "desc"),
   );
   const snap = await getDocs(ridesQuery);
-  const rides = snap.docs.map(docObj => docObj.data());
+  const rides = snap.docs.map((docObj) => docObj.data());
 
   for (const ride of rides) {
     if (ride.driver_id) {
@@ -561,7 +586,7 @@ export const getRideHistory = async (userId: string) => {
         const userSnap = await getDoc(userRef);
         ride.drivers = {
           ...driverData,
-          users: userSnap.exists() ? userSnap.data() : null
+          users: userSnap.exists() ? userSnap.data() : null,
         };
       }
     }
@@ -573,10 +598,10 @@ export const getAvailableRides = async () => {
   const ridesQuery = query(
     collection(db, "rides"),
     where("status", "==", "requested"),
-    orderBy("requested_at", "asc")
+    orderBy("requested_at", "asc"),
   );
   const snap = await getDocs(ridesQuery);
-  const rides = snap.docs.map(docObj => docObj.data());
+  const rides = snap.docs.map((docObj) => docObj.data());
 
   for (const ride of rides) {
     const userRef = doc(db, "users", ride.rider_id);
@@ -603,10 +628,13 @@ export const updateRideStatus = async (
   };
   if (driverId) updateData.driver_id = driverId;
 
-  if (dbStatus === "accepted") updateData.accepted_at = new Date().toISOString();
+  if (dbStatus === "accepted")
+    updateData.accepted_at = new Date().toISOString();
   if (dbStatus === "started") updateData.started_at = new Date().toISOString();
-  if (dbStatus === "completed") updateData.completed_at = new Date().toISOString();
-  if (dbStatus === "cancelled") updateData.cancelled_at = new Date().toISOString();
+  if (dbStatus === "completed")
+    updateData.completed_at = new Date().toISOString();
+  if (dbStatus === "cancelled")
+    updateData.cancelled_at = new Date().toISOString();
 
   await updateDoc(rideRef, updateData);
   const updatedSnap = await getDoc(rideRef);
@@ -633,10 +661,10 @@ export const getRideNegotiations = async (rideId: string) => {
   const negQuery = query(
     collection(db, "ride_negotiations"),
     where("ride_id", "==", rideId),
-    orderBy("created_at", "asc")
+    orderBy("created_at", "asc"),
   );
   const snap = await getDocs(negQuery);
-  return snap.docs.map(docObj => docObj.data());
+  return snap.docs.map((docObj) => docObj.data());
 };
 
 export const createPaymentRecord = async (payment: {
@@ -699,10 +727,10 @@ export const upsertBankDetails = async (details: {
 export const getEmergencyContacts = async (userId: string) => {
   const contactsQuery = query(
     collection(db, "emergency_contacts"),
-    where("user_id", "==", userId)
+    where("user_id", "==", userId),
   );
   const snap = await getDocs(contactsQuery);
-  return snap.docs.map(docObj => docObj.data());
+  return snap.docs.map((docObj) => docObj.data());
 };
 
 export const addEmergencyContact = async (contact: {
@@ -806,7 +834,7 @@ export const getNearbyOnlineDrivers = async (
   const driversQuery = query(
     collection(db, "drivers"),
     where("is_online", "==", true),
-    where("is_approved", "==", true)
+    where("is_approved", "==", true),
   );
 
   let snap;
@@ -831,14 +859,19 @@ export const getNearbyOnlineDrivers = async (
       try {
         userSnap = await getDoc(userRef);
       } catch (err) {
-        console.error("[getNearbyOnlineDrivers] Error fetching user " + d.id + ":", err);
+        console.error(
+          "[getNearbyOnlineDrivers] Error fetching user " + d.id + ":",
+          err,
+        );
         throw err;
       }
       const userData = userSnap.exists() ? userSnap.data() : null;
 
       drivers.push({
         ...d,
-        full_name: userData ? `${userData.first_name ?? ""} ${userData.last_name ?? ""}`.trim() : "VARLIFE Driver",
+        full_name: userData
+          ? `${userData.first_name ?? ""} ${userData.last_name ?? ""}`.trim()
+          : "VARLIFE Driver",
         profile_image: userData?.profile_image_url,
         rating: userData?.rating ?? 5,
         vehicle_plate: d.vehicle_registration,
@@ -852,10 +885,10 @@ export const getNearbyOnlineDrivers = async (
 export const getSavedLocations = async (userId: string) => {
   const locationsQuery = query(
     collection(db, "saved_locations"),
-    where("user_id", "==", userId)
+    where("user_id", "==", userId),
   );
   const snap = await getDocs(locationsQuery);
-  return snap.docs.map(docObj => docObj.data());
+  return snap.docs.map((docObj) => docObj.data());
 };
 
 export const getRecentDestinations = async (userId: string, limitVal = 5) => {
@@ -863,17 +896,18 @@ export const getRecentDestinations = async (userId: string, limitVal = 5) => {
     collection(db, "rides"),
     where("rider_id", "==", userId),
     orderBy("requested_at", "desc"),
-    limit(limitVal * 3)
+    limit(limitVal * 3),
   );
   const snap = await getDocs(ridesQuery);
-  const rides = snap.docs.map(docObj => docObj.data());
+  const rides = snap.docs.map((docObj) => docObj.data());
 
   const seen = new Set<string>();
   const unique: { address: string; latitude: number; longitude: number }[] = [];
 
   for (const ride of rides) {
     const key = ride.dropoff_address?.toLowerCase().trim();
-    if (!key || seen.has(key) || !ride.dropoff_lat || !ride.dropoff_lng) continue;
+    if (!key || seen.has(key) || !ride.dropoff_lat || !ride.dropoff_lng)
+      continue;
     seen.add(key);
     unique.push({
       address: ride.dropoff_address,
@@ -891,10 +925,10 @@ export const getPaymentHistory = async (userId: string) => {
     collection(db, "rides"),
     where("rider_id", "==", userId),
     where("status", "==", "completed"),
-    orderBy("completed_at", "desc")
+    orderBy("completed_at", "desc"),
   );
   const snap = await getDocs(ridesQuery);
-  return snap.docs.map(docObj => {
+  return snap.docs.map((docObj) => {
     const r = docObj.data();
     return {
       id: r.id,
@@ -930,10 +964,10 @@ export const getActiveRideChats = async (userId: string) => {
     where("rider_id", "==", userId),
     where("status", "in", ["accepted", "started", "completed"]),
     orderBy("updated_at", "desc"),
-    limit(20)
+    limit(20),
   );
   const snap = await getDocs(ridesQuery);
-  const rides = snap.docs.map(docObj => docObj.data());
+  const rides = snap.docs.map((docObj) => docObj.data());
 
   for (const r of rides) {
     if (r.driver_id) {
@@ -948,7 +982,9 @@ export const getActiveRideChats = async (userId: string) => {
           full_name: userSnap.exists()
             ? `${userSnap.data()?.first_name ?? ""} ${userSnap.data()?.last_name ?? ""}`.trim()
             : "Driver",
-          profile_image: userSnap.exists() ? userSnap.data()?.profile_image_url : null,
+          profile_image: userSnap.exists()
+            ? userSnap.data()?.profile_image_url
+            : null,
         };
       }
     }
@@ -1017,7 +1053,7 @@ export const deleteUserAccount = async (userId: string, clerkId: string) => {
 
   const ridesQuery = query(
     collection(db, "rides"),
-    where("rider_id", "==", userId)
+    where("rider_id", "==", userId),
   );
   const ridesSnap = await getDocs(ridesQuery);
   for (const rideDoc of ridesSnap.docs) {

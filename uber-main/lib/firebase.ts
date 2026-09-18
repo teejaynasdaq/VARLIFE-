@@ -1,10 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { initializeAuth, getAuth, Auth } from "firebase/auth";
 // @ts-ignore — RN persistence export is present at runtime in firebase/auth
 import { getReactNativePersistence } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -42,7 +42,9 @@ export function getFirebaseConfigErrors(): string[] {
     );
   }
   if (looksLikePlaceholder(firebaseConfig.messagingSenderId)) {
-    errors.push("EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID is missing or a placeholder");
+    errors.push(
+      "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID is missing or a placeholder",
+    );
   }
   return errors;
 }
@@ -51,7 +53,8 @@ export const isFirebaseConfigured = getFirebaseConfigErrors().length === 0;
 
 if (!isFirebaseConfigured && __DEV__) {
   console.warn(
-    "[Firebase] Config incomplete:\n- " + getFirebaseConfigErrors().join("\n- "),
+    "[Firebase] Config incomplete:\n- " +
+      getFirebaseConfigErrors().join("\n- "),
   );
 }
 

@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, Animated, StyleSheet, Dimensions } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { View, Text, Animated, StyleSheet } from "react-native";
 
 const SplashScreen = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -26,7 +24,7 @@ const SplashScreen = () => {
         useNativeDriver: false,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim, letterSpacingAnim]);
 
   return (
     <View style={styles.container}>

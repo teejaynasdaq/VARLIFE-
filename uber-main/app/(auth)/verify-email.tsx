@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { sendEmailVerification } from "firebase/auth";
 import { useCallback, useState, useEffect } from "react";
 import {
   Alert,
@@ -9,10 +10,9 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
-import { sendEmailVerification } from "firebase/auth";
 
-import { auth } from "@/lib/firebase";
 import CustomButton from "@/components/CustomButton";
+import { auth } from "@/lib/firebase";
 
 export default function VerifyEmail() {
   const [loading, setLoading] = useState(false);
@@ -47,10 +47,16 @@ export default function VerifyEmail() {
         Alert.alert("Success", "Email verified successfully!");
         router.replace("/(root)/(tabs)/home");
       } else {
-        Alert.alert("Not Verified Yet", "Please check your inbox and tap the link to verify your email.");
+        Alert.alert(
+          "Not Verified Yet",
+          "Please check your inbox and tap the link to verify your email.",
+        );
       }
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to check email verification status.");
+      Alert.alert(
+        "Error",
+        err.message || "Failed to check email verification status.",
+      );
     } finally {
       setLoading(false);
     }
@@ -61,9 +67,15 @@ export default function VerifyEmail() {
     setResending(true);
     try {
       await sendEmailVerification(auth.currentUser);
-      Alert.alert("Link Sent", "A new verification link has been sent to your email.");
+      Alert.alert(
+        "Link Sent",
+        "A new verification link has been sent to your email.",
+      );
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Could not resend verification link.");
+      Alert.alert(
+        "Error",
+        err.message || "Could not resend verification link.",
+      );
     } finally {
       setResending(false);
     }
@@ -86,7 +98,8 @@ export default function VerifyEmail() {
             Verify Email
           </Text>
           <Text className="text-neutral-500 text-sm font-JakartaMedium text-center leading-6 px-4">
-            A verification link was sent to your email address. Please tap the link to activate your account.
+            A verification link was sent to your email address. Please tap the
+            link to activate your account.
           </Text>
         </View>
 

@@ -1,12 +1,6 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  Easing
-} from "react-native";
-import { useEffect, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef } from "react";
+import { View, Text, TouchableOpacity, Animated, Easing } from "react-native";
 
 interface Props {
   onCancel: () => void;
@@ -30,7 +24,7 @@ const DriverSearch = ({ onCancel }: Props) => {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
   }, [pulseAnim]);
 
@@ -44,11 +38,11 @@ const DriverSearch = ({ onCancel }: Props) => {
       </Text>
 
       <View className="flex-1 justify-center items-center">
-        <Animated.View 
+        <Animated.View
           className="w-24 h-24 rounded-full bg-[#1E1E1E] border border-[#333] items-center justify-center mb-5"
           style={{ transform: [{ scale: pulseAnim }] }}
         >
-           <Ionicons name="car" size={40} color="white" />
+          <Ionicons name="car" size={40} color="white" />
         </Animated.View>
       </View>
 

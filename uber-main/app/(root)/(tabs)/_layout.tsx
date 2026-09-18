@@ -2,9 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { Tabs } from "expo-router";
-import { Image, ImageSourcePropType, View, Platform } from "react-native";
-
-import { icons } from "@/constants";
+import { View } from "react-native";
 
 const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
   return (

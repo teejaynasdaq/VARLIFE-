@@ -49,13 +49,21 @@ const SettingItem = ({
         <View className="w-10 h-10 bg-neutral-900 rounded-xl items-center justify-center">
           <Ionicons name={icon as any} size={20} color={color} />
         </View>
-        <Text className="text-white text-base font-JakartaMedium ml-4 flex-shrink" numberOfLines={1}>
+        <Text
+          className="text-white text-base font-JakartaMedium ml-4 flex-shrink"
+          numberOfLines={1}
+        >
           {label}
         </Text>
       </View>
       <View className="flex-row items-center flex-shrink max-w-[50%]">
         {value && (
-          <Text className="text-neutral-500 text-sm mr-2 flex-shrink" numberOfLines={1}>{value}</Text>
+          <Text
+            className="text-neutral-500 text-sm mr-2 flex-shrink"
+            numberOfLines={1}
+          >
+            {value}
+          </Text>
         )}
         <Ionicons name="chevron-forward" size={18} color="#444" />
       </View>
@@ -74,14 +82,8 @@ const Profile = () => {
     user?.profile_image_url || null,
   );
   const [saving, setSaving] = useState(false);
-  const displayName =
-    editForm.name ||
-    user?.full_name ||
-    "Valued Guest";
-  const displayAvatar =
-    avatarUrl ||
-    user?.profile_image_url ||
-    null;
+  const displayName = editForm.name || user?.full_name || "Valued Guest";
+  const displayAvatar = avatarUrl || user?.profile_image_url || null;
 
   const handleLogOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -220,7 +222,13 @@ const Profile = () => {
             <SettingItem
               icon="mail"
               label="Email"
-              value={user?.email ? (user.email.length > 20 ? user.email.substring(0, 17) + "..." : user.email) : ""}
+              value={
+                user?.email
+                  ? user.email.length > 20
+                    ? user.email.substring(0, 17) + "..."
+                    : user.email
+                  : ""
+              }
               onPress={() => router.push("/(root)/settings")}
             />
             <SettingItem

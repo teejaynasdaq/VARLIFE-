@@ -47,18 +47,15 @@ export default function DriverVerificationScreen() {
 
   useEffect(() => {
     if (!user?.id) return;
-    return subscribeToDriverVerification(
-      user.id,
-      (updated) => {
-        setVerification(updated);
-        if (updated.verification_status === "verified") {
-          notifyLocal(
-            "Licence Verified",
-            "You can now complete onboarding and go online.",
-          );
-        }
+    return subscribeToDriverVerification(user.id, (updated) => {
+      setVerification(updated);
+      if (updated.verification_status === "verified") {
+        notifyLocal(
+          "Licence Verified",
+          "You can now complete onboarding and go online.",
+        );
       }
-    );
+    });
   }, [user?.id]);
 
   useEffect(() => {
@@ -77,9 +74,7 @@ export default function DriverVerificationScreen() {
       if (polling || !verification.veriff_session_id) return;
       setPolling(true);
       try {
-        const result = await pollVeriffStatus(
-          verification.veriff_session_id
-        );
+        const result = await pollVeriffStatus(verification.veriff_session_id);
         setVerification((prev) =>
           prev
             ? {
@@ -237,7 +232,9 @@ export default function DriverVerificationScreen() {
             activeOpacity={0.76}
             onPress={handleRetry}
           >
-            <Text style={[styles.actionBtnLabel, { color: "#000" }]}>Retry Verification</Text>
+            <Text style={[styles.actionBtnLabel, { color: "#000" }]}>
+              Retry Verification
+            </Text>
           </TouchableOpacity>
         )}
 

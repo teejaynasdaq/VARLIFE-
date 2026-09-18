@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Text,
   View,
@@ -10,25 +11,23 @@ import {
   Image,
   Platform,
   Alert,
-  ScrollView,
   StatusBar,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BookingBottomSheet from "@/components/BookingBottomSheet";
 import BookingCard from "@/components/BookingCard";
 import DriverCard from "@/components/DriverCard";
 import DriverSearch from "@/components/DriverSearch";
 import GoogleMap from "@/components/GoogleMap";
-import BookingBottomSheet from "@/components/BookingBottomSheet";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import VarlifeDrawer from "@/components/VarlifeDrawer";
 import { icons } from "@/constants";
 import { useAuth } from "@/context/AuthContext";
 import { mapSupabaseDriver } from "@/lib/fetch";
-import { generateMarkersFromData } from "@/lib/map";
 import { googleMaps } from "@/lib/googleMaps";
+import { generateMarkersFromData } from "@/lib/map";
 import { notifyLocal } from "@/lib/notifications";
 import { getTimeBasedHint } from "@/lib/rideRecommendations";
 import { toDbStatus } from "@/lib/rideStatus";
@@ -62,14 +61,13 @@ const Home = () => {
   const { setCurrentRideId } = useRideStore();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [negotiatedPrice, setNegotiatedPrice] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "payshap">("cash");
   const [step, setStep] = useState<
     "search" | "booking" | "searching" | "driver_assigned" | "in_trip"
   >("search");
   const [isDestinationSearchOpen, setIsDestinationSearchOpen] = useState(false);
-  const [searchMode, setSearchMode] = useState<"destination" | "stop">("destination");
-  const [selectedRide, setSelectedRide] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<"destination" | "stop">(
+    "destination",
+  );
   const [assignedDriver, setAssignedDriver] = useState<Driver | null>(null);
   const [vehiclePlate, setVehiclePlate] = useState<string>("");
   const [eta, setEta] = useState("—");
@@ -79,7 +77,26 @@ const Home = () => {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const matchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const snapPoints = useMemo(() => ["45%", "85%"], []);
+
+  const clearMatchTimeout = useCallback(() => {
+    if (matchTimeoutRef.current) {
+      clearTimeout(matchTimeoutRef.current);
+      matchTimeoutRef.current = null;
+    }
+  }, []);
+
+  const resetRideFlow = useCallback(() => {
+    clearMatchTimeout();
+    setActiveRideId(null);
+    setCurrentRideId(null);
+    setAssignedDriver(null);
+    setStep("search");
+    setDestinationLocation({
+      latitude: null,
+      longitude: null,
+      address: null,
+    });
+  }, [clearMatchTimeout, setCurrentRideId, setDestinationLocation]);
 
   const loadNearbyDrivers = useCallback(async () => {
     if (!userLatitude || !userLongitude) return;
@@ -120,17 +137,27 @@ const Home = () => {
 
   // Handle returning from a search or booking flow if we want to reset
   useEffect(() => {
-    if (destinationLatitude && destinationLongitude && step === "search" && !isDestinationSearchOpen) {
+    if (
+      destinationLatitude &&
+      destinationLongitude &&
+      step === "search" &&
+      !isDestinationSearchOpen
+    ) {
       setStep("booking");
     }
-  }, [destinationLatitude, destinationLongitude, step, isDestinationSearchOpen]);
+  }, [
+    destinationLatitude,
+    destinationLongitude,
+    step,
+    isDestinationSearchOpen,
+  ]);
 
   useEffect(() => {
     if (params.startSearch === "true" && params.rideId && step === "search") {
       setStep("searching");
       setActiveRideId(params.rideId as string);
       router.setParams({ startSearch: undefined, rideId: undefined });
-      
+
       matchTimeoutRef.current = setTimeout(() => {
         Alert.alert(
           "No Drivers Available",
@@ -140,7 +167,11 @@ const Home = () => {
               text: "Keep Searching",
               onPress: () => {
                 matchTimeoutRef.current = setTimeout(async () => {
-                  await cancelRide(params.rideId as string, "system", "Match timeout");
+                  await cancelRide(
+                    params.rideId as string,
+                    "system",
+                    "Match timeout",
+                  );
                   Alert.alert(
                     "Search Expired",
                     "Please try again when more drivers are online.",
@@ -153,7 +184,11 @@ const Home = () => {
               text: "Cancel",
               style: "cancel",
               onPress: async () => {
-                await cancelRide(params.rideId as string, "user", "No drivers found");
+                await cancelRide(
+                  params.rideId as string,
+                  "user",
+                  "No drivers found",
+                );
                 resetRideFlow();
               },
             },
@@ -161,14 +196,7 @@ const Home = () => {
         );
       }, MATCH_TIMEOUT_MS);
     }
-  }, [params.startSearch, params.rideId, step]);
-
-  const clearMatchTimeout = () => {
-    if (matchTimeoutRef.current) {
-      clearTimeout(matchTimeoutRef.current);
-      matchTimeoutRef.current = null;
-    }
-  };
+  }, [params.startSearch, params.rideId, step, resetRideFlow]);
 
   const handleDriverAccepted = useCallback(
     async (ride: any) => {
@@ -196,12 +224,7 @@ const Home = () => {
         setSelectedDriver(1);
       }
 
-      if (
-        userLatitude &&
-        userLongitude &&
-        d?.current_lat &&
-        d?.current_lng
-      ) {
+      if (userLatitude && userLongitude && d?.current_lat && d?.current_lng) {
         try {
           const matrix = await googleMaps.getDistanceMatrix(
             d.current_lat,
@@ -220,7 +243,7 @@ const Home = () => {
       clearMatchTimeout();
       setStep("driver_assigned");
     },
-    [userLatitude, userLongitude, setSelectedDriver],
+    [userLatitude, userLongitude, setSelectedDriver, clearMatchTimeout],
   );
 
   useEffect(() => {
@@ -262,21 +285,7 @@ const Home = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeRideId, step, handleDriverAccepted]);
-
-  const resetRideFlow = () => {
-    clearMatchTimeout();
-    setActiveRideId(null);
-    setCurrentRideId(null);
-    setAssignedDriver(null);
-    setSelectedRide(null);
-    setStep("search");
-    setDestinationLocation({
-      latitude: null,
-      longitude: null,
-      address: null,
-    });
-  };
+  }, [activeRideId, step, handleDriverAccepted, resetRideFlow]);
 
   const handleDestinationPress = () => {
     setSearchMode("destination");
@@ -294,7 +303,11 @@ const Home = () => {
     setStep("booking");
   };
 
-  const handleRequestRide = async (rideType: string, offerAmount: number, payMethod: "cash" | "payshap") => {
+  const handleRequestRide = async (
+    rideType: string,
+    offerAmount: number,
+    payMethod: "cash" | "payshap",
+  ) => {
     if (isGuest || !user?.id) {
       Alert.alert("Sign In Required", "Please sign in to book a ride.");
       return;
@@ -356,18 +369,15 @@ const Home = () => {
                 resetRideFlow();
               },
             },
-          ]
+          ],
         );
       }, MATCH_TIMEOUT_MS);
-
     } catch (err: any) {
       Alert.alert("Booking Failed", err.message ?? "Could not request ride.");
     } finally {
       setIsCreatingRide(false);
     }
   };
-
-
 
   const handleCancelSearch = async () => {
     if (activeRideId) {
@@ -456,7 +466,15 @@ const Home = () => {
             {timeHint && (
               <View className="flex-row justify-start px-5 mt-4">
                 <View className="flex-row items-center bg-[#1E1E1E] px-4 py-2.5 rounded-full border border-[#2A2A2A]">
-                  <Ionicons name={timeHint === "Late night ride" ? "moon-outline" : "alarm-outline"} size={16} color="white" />
+                  <Ionicons
+                    name={
+                      timeHint === "Late night ride"
+                        ? "moon-outline"
+                        : "alarm-outline"
+                    }
+                    size={16}
+                    color="white"
+                  />
                   <Text className="text-white font-JakartaMedium text-xs ml-2">
                     {timeHint}
                   </Text>
@@ -499,7 +517,10 @@ const Home = () => {
                 </Text>
                 <View className="flex-row items-center bg-[#1A1A1A] rounded-2xl px-5 py-4 border border-[#2A2A2A] mb-4">
                   <Ionicons name="location-outline" size={18} color="#888" />
-                  <Text className="text-white font-JakartaMedium ml-3 flex-1" numberOfLines={1}>
+                  <Text
+                    className="text-white font-JakartaMedium ml-3 flex-1"
+                    numberOfLines={1}
+                  >
                     {userAddress || "Current Location"}
                   </Text>
                 </View>
@@ -523,10 +544,17 @@ const Home = () => {
 
         {step === "booking" && (
           <>
-            <SafeAreaView className="absolute top-0 left-0 right-0 z-50 px-5 pt-4" edges={["top"]}>
+            <SafeAreaView
+              className="absolute top-0 left-0 right-0 z-50 px-5 pt-4"
+              edges={["top"]}
+            >
               <TouchableOpacity
                 onPress={() => {
-                  setDestinationLocation({ latitude: null, longitude: null, address: null });
+                  setDestinationLocation({
+                    latitude: null,
+                    longitude: null,
+                    address: null,
+                  });
                   setStep("search");
                 }}
                 className="w-12 h-12 rounded-full bg-[#1A1A1A] items-center justify-center border border-[#2A2A2A] shadow-md"
@@ -549,19 +577,13 @@ const Home = () => {
         <VarlifeDrawer
           visible={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          userName={
-            user?.first_name ||
-            user?.full_name ||
-            "Guest"
-          }
+          userName={user?.first_name || user?.full_name || "Guest"}
           userEmail={user?.email}
           userAvatar={user?.profile_image_url}
           rating={4.98}
           rideCount={0}
           onSignOut={handleSignOut}
         />
-
-
 
         {step === "searching" && (
           <View className="absolute bottom-0 left-0 right-0 z-50">

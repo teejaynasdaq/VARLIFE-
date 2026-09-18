@@ -132,7 +132,7 @@ export default function DriverRegisterScreen() {
           payshapNumber,
         };
         await AsyncStorage.setItem(FORM_CACHE_KEY, JSON.stringify(formState));
-      } catch (e) {
+      } catch {
         // ignore
       }
     };
@@ -317,16 +317,13 @@ export default function DriverRegisterScreen() {
 
       if (driverError) throw driverError;
 
-      await supabase
-        .from("users")
-        .eq("id", user.id)
-        .update({
-          phone: phoneNumber,
-          first_name: firstName,
-          last_name: surname,
-          role: "driver",
-          updated_at: new Date().toISOString(),
-        });
+      await supabase.from("users").eq("id", user.id).update({
+        phone: phoneNumber,
+        first_name: firstName,
+        last_name: surname,
+        role: "driver",
+        updated_at: new Date().toISOString(),
+      });
 
       if (bankName || accountNumber || payshapNumber.trim()) {
         await supabase.from("driver_payout_details").upsert(

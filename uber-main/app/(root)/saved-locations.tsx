@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,27 +12,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAuth } from "@/context/AuthContext";
-import { googleMaps } from "@/lib/googleMaps";
-import { supabase } from "@/lib/supabase";
-import { useLocationStore } from "@/store";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function SavedLocations() {
   const { user } = useAuth();
-  const { userLatitude, userLongitude } = useLocationStore();
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
 
-  useEffect(() => {
-    fetchLocations();
-  }, []);
-
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -46,13 +39,15 @@ export default function SavedLocations() {
       } else {
         setLocations(data || []);
       }
-    } catch (e) {
+    } catch {
       console.log("Supabase error, possibly table doesn't exist yet.");
     }
     setLoading(false);
-  };
+  }, [user?.id]);
 
-
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
 
   const handleSaveLocation = async () => {
     if (!title) {
@@ -138,14 +133,20 @@ export default function SavedLocations() {
                 className="py-4 bg-white rounded-full items-center mb-4 mt-4"
                 onPress={handleSaveLocation}
               >
-                <Text className="text-black font-JakartaBold text-lg">Save Location</Text>
+                <Text className="text-black font-JakartaBold text-lg">
+                  Save Location
+                </Text>
               </TouchableOpacity>
             </>
           )}
 
           <TouchableOpacity
             className="mt-auto mb-10 py-4 bg-neutral-800 rounded-full items-center"
-            onPress={() => { setIsAdding(false); setSelectedLocation(null); setTitle(""); }}
+            onPress={() => {
+              setIsAdding(false);
+              setSelectedLocation(null);
+              setTitle("");
+            }}
           >
             <Text className="text-white font-JakartaBold">Cancel</Text>
           </TouchableOpacity>
@@ -166,7 +167,10 @@ export default function SavedLocations() {
               </Text>
             </View>
           ) : (
-            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={{ paddingBottom: 120 }}
+            >
               {locations.map((loc) => (
                 <View
                   key={loc.id}

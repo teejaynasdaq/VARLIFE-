@@ -1,14 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { Image, Text, View, TouchableOpacity, Alert, StyleSheet } from "react-native";
-import { GoogleAuthProvider, OAuthProvider, signInWithCredential } from "firebase/auth";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
+import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import {
+  Image,
+  Text,
+  View,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+} from "react-native";
 
-import { auth } from "@/lib/firebase";
 import { icons } from "@/constants";
 import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
+import { auth } from "@/lib/firebase";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -16,10 +23,11 @@ const OAuth = () => {
   useWarmUpBrowser();
 
   // Expo Auth Session Google Sign In hook setup
-  const [request, response, promptAsync] = Google.useAuthRequest({
+  const [request, , promptAsync] = Google.useAuthRequest({
     iosClientId: "google-ios-client-id-placeholder",
     androidClientId: "google-android-client-id-placeholder",
-    webClientId: "370761195543-tg70f9bd3r9h2sj5ig2vvh841dea1hb4.apps.googleusercontent.com",
+    webClientId:
+      "370761195543-tg70f9bd3r9h2sj5ig2vvh841dea1hb4.apps.googleusercontent.com",
     redirectUri: AuthSession.makeRedirectUri({
       scheme: "varlife",
       path: "oauth-callback",
@@ -39,22 +47,24 @@ const OAuth = () => {
       console.error("[OAuth] Google Sign-In Error:", err);
       Alert.alert(
         "Google Sign-In Failed",
-        err.message || "Could not authenticate with Google. Please try again."
+        err.message || "Could not authenticate with Google. Please try again.",
       );
     }
   };
 
   const handleAppleSignIn = async () => {
     try {
-      // Direct Apple provider initialization
-      const provider = new OAuthProvider("apple.com");
-      // Since Apple Sign In requires native configuration, we use standard error handling or fallback
-      Alert.alert("Apple Sign-In", "Apple Sign-In is configured for production builds.");
+      // Apple Sign In requires native configuration; show a fallback message
+      // until that's wired up for production builds.
+      Alert.alert(
+        "Apple Sign-In",
+        "Apple Sign-In is configured for production builds.",
+      );
     } catch (err: any) {
       console.error("[OAuth] Apple Sign-In Error:", err);
       Alert.alert(
         "Apple Sign-In Failed",
-        err.message || "Could not authenticate with Apple. Please try again."
+        err.message || "Could not authenticate with Apple. Please try again.",
       );
     }
   };
@@ -75,6 +85,7 @@ const OAuth = () => {
           onPress={handleGoogleSignIn}
           style={styles.oauthBtn}
           activeOpacity={0.74}
+          disabled={!request}
         >
           <Image
             source={icons.google}

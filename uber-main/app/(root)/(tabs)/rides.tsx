@@ -41,49 +41,82 @@ const Rides = () => {
   return (
     <SafeAreaView className="flex-1 bg-black">
       <View className="px-5 pt-2 mb-4">
-        <Text className="text-2xl font-JakartaExtraBold text-white mb-4">Your Rides</Text>
+        <Text className="text-2xl font-JakartaExtraBold text-white mb-4">
+          Your Rides
+        </Text>
         <View className="flex-row bg-neutral-900 rounded-full p-1 border border-neutral-800">
           <TouchableOpacity
             onPress={() => setActiveTab("upcoming")}
             className={`flex-1 py-2.5 rounded-full items-center ${activeTab === "upcoming" ? "bg-white" : "bg-transparent"}`}
           >
-            <Text className={`font-JakartaBold ${activeTab === "upcoming" ? "text-black" : "text-neutral-500"}`}>Upcoming</Text>
+            <Text
+              className={`font-JakartaBold ${activeTab === "upcoming" ? "text-black" : "text-neutral-500"}`}
+            >
+              Upcoming
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab("past")}
             className={`flex-1 py-2.5 rounded-full items-center ${activeTab === "past" ? "bg-white" : "bg-transparent"}`}
           >
-            <Text className={`font-JakartaBold ${activeTab === "past" ? "text-black" : "text-neutral-500"}`}>Past</Text>
+            <Text
+              className={`font-JakartaBold ${activeTab === "past" ? "text-black" : "text-neutral-500"}`}
+            >
+              Past
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
       {loading && recentRides.length === 0 ? (
         <View className="px-5 mt-2">
           {[1, 2, 3, 4].map((i) => (
-            <View key={i} className="bg-dark-100 p-6 rounded-[32px] mb-6 border border-neutral-900 shadow-sm">
+            <View
+              key={i}
+              className="bg-dark-100 p-6 rounded-[32px] mb-6 border border-neutral-900 shadow-sm"
+            >
               <View className="flex-row justify-between mb-6">
                 <View>
-                  <Skeleton width={100} height={12} style={{ marginBottom: 8 }} />
+                  <Skeleton
+                    width={100}
+                    height={12}
+                    style={{ marginBottom: 8 }}
+                  />
                   <Skeleton width={60} height={18} />
                 </View>
                 <View className="items-end">
-                  <Skeleton width={80} height={24} style={{ marginBottom: 6 }} />
+                  <Skeleton
+                    width={80}
+                    height={24}
+                    style={{ marginBottom: 6 }}
+                  />
                   <Skeleton width={50} height={10} />
                 </View>
               </View>
               <View className="flex-row items-center">
                 <View className="items-center mr-5">
                   <Skeleton width={10} height={10} borderRadius={5} />
-                  <Skeleton width={1} height={40} style={{ marginVertical: 4 }} />
+                  <Skeleton
+                    width={1}
+                    height={40}
+                    style={{ marginVertical: 4 }}
+                  />
                   <Skeleton width={14} height={14} borderRadius={7} />
                 </View>
                 <View className="flex-1">
                   <View className="mb-5">
-                    <Skeleton width="80%" height={16} style={{ marginBottom: 6 }} />
+                    <Skeleton
+                      width="80%"
+                      height={16}
+                      style={{ marginBottom: 6 }}
+                    />
                     <Skeleton width={100} height={10} />
                   </View>
                   <View>
-                    <Skeleton width="60%" height={16} style={{ marginBottom: 6 }} />
+                    <Skeleton
+                      width="60%"
+                      height={16}
+                      style={{ marginBottom: 6 }}
+                    />
                     <Skeleton width={100} height={10} />
                   </View>
                 </View>
@@ -93,7 +126,20 @@ const Rides = () => {
         </View>
       ) : (
         <FlatList
-          data={activeTab === "upcoming" ? recentRides.filter(r => !["COMPLETED", "CANCELLED"].includes((r.status || "").toUpperCase())) : recentRides.filter(r => ["COMPLETED", "CANCELLED"].includes((r.status || "").toUpperCase()))}
+          data={
+            activeTab === "upcoming"
+              ? recentRides.filter(
+                  (r) =>
+                    !["COMPLETED", "CANCELLED"].includes(
+                      (r.status || "").toUpperCase(),
+                    ),
+                )
+              : recentRides.filter((r) =>
+                  ["COMPLETED", "CANCELLED"].includes(
+                    (r.status || "").toUpperCase(),
+                  ),
+                )
+          }
           renderItem={({ item }) => <RideCard ride={item} />}
           keyExtractor={(item) => item.id ?? String(Math.random())}
           className="px-5"

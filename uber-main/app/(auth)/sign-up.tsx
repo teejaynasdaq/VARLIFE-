@@ -1,13 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router, type Href } from "expo-router";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+} from "firebase/auth";
 import { useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
-import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
+import {
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 
-import { auth, isFirebaseConfigured, getFirebaseConfigErrors } from "@/lib/firebase";
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import OAuth from "@/components/OAuth";
+import {
+  auth,
+  isFirebaseConfigured,
+  getFirebaseConfigErrors,
+} from "@/lib/firebase";
 
 export default function SignUp() {
   const [loading, setLoading] = useState(false);
@@ -23,17 +39,29 @@ export default function SignUp() {
       Alert.alert("Missing Fields", "Please fill in all required fields.");
       return;
     }
+    if (!isFirebaseConfigured) {
+      console.error(
+        "[SignUp] Firebase is not configured:",
+        getFirebaseConfigErrors().join(", "),
+      );
+      Alert.alert(
+        "App Not Configured",
+        "Sign up is temporarily unavailable. Please try again later.",
+      );
+      return;
+    }
     setLoading(true);
     try {
       // Create user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         form.email.trim(),
-        form.password
+        form.password,
       );
 
       // Update user display name
-      const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+      const fullName =
+        `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
       await updateProfile(userCredential.user, {
         displayName: fullName,
       });
@@ -50,7 +78,7 @@ export default function SignUp() {
       console.error("[SignUp] Error:", err);
       Alert.alert(
         "Sign Up Error",
-        err.message || "Could not create account. Please try again."
+        err.message || "Could not create account. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -58,11 +86,14 @@ export default function SignUp() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView className="flex-1 bg-black" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        className="flex-1 bg-black"
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="flex-1 bg-black px-8 py-10 min-h-screen">
           <View className="flex-row items-center mt-10 mb-16">
             <TouchableOpacity onPress={() => router.back()}>

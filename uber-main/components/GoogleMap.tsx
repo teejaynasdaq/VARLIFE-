@@ -1,6 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { View, Image, Dimensions, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 
 import { icons } from "@/constants";
@@ -14,10 +14,26 @@ const DARK_MAP_STYLE = [
   { elementType: "geometry", stylers: [{ color: "#0d0d0d" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#6b6b6b" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0d0d0d" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#2a2a2a" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#222" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#1a1a1a" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#2a2a2a" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#222" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#000000" }],
+  },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
@@ -56,7 +72,7 @@ const GoogleMap = () => {
         userLongitude,
         destinationLatitude,
         destinationLongitude,
-        stops.map(s => ({ latitude: s.latitude, longitude: s.longitude }))
+        stops.map((s) => ({ latitude: s.latitude, longitude: s.longitude })),
       );
       if (route) {
         setRouteCoords(route.coords);
@@ -166,82 +182,88 @@ const GoogleMap = () => {
           </>
         )}
 
-        {drivers.map((driver) => (
-          <Marker
-            key={driver.id}
-            coordinate={{
-              latitude: driver.latitude,
-              longitude: driver.longitude,
-            }}
-            style={{
-              transform: [{ rotate: `${driver.heading || 0}deg` }]
-            }}
-          >
-            <View
+        {drivers.map((driver) => {
+          const isSelected = driver.id === selectedDriver;
+          return (
+            <Marker
+              key={driver.id}
+              coordinate={{
+                latitude: driver.latitude,
+                longitude: driver.longitude,
+              }}
               style={{
-                width: 24,
-                height: 48,
-                borderRadius: 12,
-                alignItems: "center",
-                justifyContent: "center",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.4,
-                shadowRadius: 6,
-                elevation: 8,
-                borderWidth: 1.5,
-                borderColor: 'rgba(255,255,255,0.1)',
-                backgroundColor: "#000",
+                transform: [{ rotate: `${driver.heading || 0}deg` }],
               }}
             >
               <View
                 style={{
-                  position: "absolute",
-                  top: -4,
-                  left: 1,
-                  right: 1,
-                  height: 6,
-                  backgroundColor: "rgba(0,0,0,0.8)",
-                  borderTopLeftRadius: 4,
-                  borderTopRightRadius: 4,
+                  width: 24,
+                  height: 48,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 6,
+                  elevation: 8,
+                  borderWidth: isSelected ? 2 : 1.5,
+                  borderColor: isSelected ? "#0286FF" : "rgba(255,255,255,0.1)",
+                  backgroundColor: "#000",
                 }}
-              />
-              <View
-                style={{
-                  width: 16,
-                  height: 24,
-                  borderRadius: 6,
-                  backgroundColor: '#1A1A1A',
-                  position: "relative",
-                }}
-              />
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: -3,
-                  left: 2,
-                  right: 2,
-                  height: 4,
-                  backgroundColor: "rgba(0,0,0,0.8)",
-                  borderBottomLeftRadius: 3,
-                  borderBottomRightRadius: 3,
-                }}
-              />
-            </View>
-          </Marker>
-        ))}
+              >
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    left: 1,
+                    right: 1,
+                    height: 6,
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                    borderTopLeftRadius: 4,
+                    borderTopRightRadius: 4,
+                  }}
+                />
+                <View
+                  style={{
+                    width: 16,
+                    height: 24,
+                    borderRadius: 6,
+                    backgroundColor: "#1A1A1A",
+                    position: "relative",
+                  }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: -3,
+                    left: 2,
+                    right: 2,
+                    height: 4,
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                    borderBottomLeftRadius: 3,
+                    borderBottomRightRadius: 3,
+                  }}
+                />
+              </View>
+            </Marker>
+          );
+        })}
       </MapView>
 
       <TouchableOpacity
         className="absolute bottom-28 right-5 w-14 h-14 bg-[#1E1E1E] rounded-full items-center justify-center border border-[#2A2A2A] shadow-lg z-50"
         onPress={() => {
           if (userLatitude && userLongitude) {
-            mapRef.current?.animateToRegion({
-              latitude: userLatitude,
-              longitude: userLongitude,
-              latitudeDelta: 0.012,
-              longitudeDelta: 0.012,
-            }, 1000);
+            mapRef.current?.animateToRegion(
+              {
+                latitude: userLatitude,
+                longitude: userLongitude,
+                latitudeDelta: 0.012,
+                longitudeDelta: 0.012,
+              },
+              1000,
+            );
           }
         }}
       >

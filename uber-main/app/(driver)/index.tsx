@@ -1,5 +1,5 @@
 import { useRouter, type Href } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 
 import { useAuth } from "@/context/AuthContext";
@@ -12,11 +12,9 @@ import { canDriverGoOnline } from "@/lib/veriff";
 export default function DriverIndex() {
   const { user } = useAuth();
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      setChecking(false);
       router.replace("/(auth)/welcome");
       return;
     }
@@ -47,8 +45,6 @@ export default function DriverIndex() {
       } catch (err) {
         console.error("[Driver Index] Error checking driver profile:", err);
         router.replace("/(driver)/driver-register");
-      } finally {
-        setChecking(false);
       }
     };
 

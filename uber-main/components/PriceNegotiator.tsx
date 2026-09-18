@@ -12,7 +12,7 @@ const PriceNegotiator = () => {
     if (estimatedPrice && !negotiatedPrice) {
       setNegotiatedPrice(estimatedPrice);
     }
-  }, [estimatedPrice]);
+  }, [estimatedPrice, negotiatedPrice, setNegotiatedPrice]);
 
   const handleAdjust = (amount: number) => {
     if (!negotiatedPrice) return;

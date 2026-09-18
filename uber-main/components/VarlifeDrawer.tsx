@@ -29,11 +29,31 @@ interface DrawerProps {
 }
 
 const MENU_ITEMS = [
-  { icon: "time-outline" as const, label: "Ride History", route: "/(root)/(tabs)/rides" },
-  { icon: "wallet-outline" as const, label: "Payments", route: "/(root)/payment" },
-  { icon: "school-outline" as const, label: "Student Experience", route: "/(root)/student-experience" },
-  { icon: "settings-outline" as const, label: "Settings", route: "/(root)/settings" },
-  { icon: "bookmark-outline" as const, label: "Saved Places", route: "/(root)/saved-locations" },
+  {
+    icon: "time-outline" as const,
+    label: "Ride History",
+    route: "/(root)/(tabs)/rides",
+  },
+  {
+    icon: "wallet-outline" as const,
+    label: "Payments",
+    route: "/(root)/payment",
+  },
+  {
+    icon: "school-outline" as const,
+    label: "Student Experience",
+    route: "/(root)/student-experience",
+  },
+  {
+    icon: "settings-outline" as const,
+    label: "Settings",
+    route: "/(root)/settings",
+  },
+  {
+    icon: "bookmark-outline" as const,
+    label: "Saved Places",
+    route: "/(root)/saved-locations",
+  },
 ];
 
 export default function VarlifeDrawer({
@@ -63,7 +83,12 @@ export default function VarlifeDrawer({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+    >
       <View className="flex-1 flex-row">
         <Animated.View
           style={{
@@ -93,7 +118,12 @@ export default function VarlifeDrawer({
                 <Text className="text-white text-lg font-JakartaExtraBold">
                   {userName}
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color="#666" style={{ marginLeft: 4 }} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color="#666"
+                  style={{ marginLeft: 4 }}
+                />
               </View>
               <View className="flex-row items-center mt-1">
                 <Text className="text-yellow-400 text-xs mr-1">★★★★★</Text>
@@ -102,7 +132,10 @@ export default function VarlifeDrawer({
                 </Text>
               </View>
               {userEmail ? (
-                <Text className="text-neutral-600 text-xs mt-1" numberOfLines={1}>
+                <Text
+                  className="text-neutral-600 text-xs mt-1"
+                  numberOfLines={1}
+                >
                   {userEmail}
                 </Text>
               ) : null}
@@ -148,7 +181,6 @@ export default function VarlifeDrawer({
             >
               <Text style={styles.logoutBtnText}>Logout</Text>
             </TouchableOpacity>
-
           </View>
         </Animated.View>
 
@@ -169,7 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     shadowColor: "#DFFF00",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
   },
