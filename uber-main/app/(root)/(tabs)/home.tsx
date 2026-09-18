@@ -503,6 +503,8 @@ const Home = () => {
                 <TouchableOpacity
                   onPress={() => setIsDestinationSearchOpen(false)}
                   className="w-10 h-10 rounded-full bg-[#1A1A1A] items-center justify-center border border-[#2A2A2A]"
+                  accessibilityRole="button"
+                  accessibilityLabel="Close search"
                 >
                   <Ionicons name="chevron-back" size={20} color="white" />
                 </TouchableOpacity>
@@ -558,6 +560,8 @@ const Home = () => {
                   setStep("search");
                 }}
                 className="w-12 h-12 rounded-full bg-[#1A1A1A] items-center justify-center border border-[#2A2A2A] shadow-md"
+                accessibilityRole="button"
+                accessibilityLabel="Cancel and go back"
               >
                 <Ionicons name="chevron-back" size={24} color="white" />
               </TouchableOpacity>

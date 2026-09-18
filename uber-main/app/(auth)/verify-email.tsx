@@ -85,7 +85,11 @@ export default function VerifyEmail() {
     <ScrollView className="flex-1 bg-black">
       <View className="flex-1 bg-black px-8 py-10 min-h-screen">
         <View className="flex-row items-center mt-10 mb-16">
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <Ionicons name="chevron-back" size={24} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-xl font-JakartaExtraBold tracking-[4px] absolute left-0 right-0 text-center">
@@ -111,9 +115,9 @@ export default function VerifyEmail() {
         </View>
 
         <CustomButton
-          title={loading ? "Checking..." : "I've Verified My Email"}
+          title="I've Verified My Email"
           onPress={onCheckVerification}
-          disabled={loading}
+          loading={loading}
         />
 
         <TouchableOpacity

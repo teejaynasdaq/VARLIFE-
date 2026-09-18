@@ -1,5 +1,10 @@
 import * as Haptics from "expo-haptics";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 
 import { ButtonProps } from "@/types/type";
 
@@ -19,9 +24,9 @@ const GLASS_STYLES: Record<
     shadow: "#000000",
   },
   danger: {
-    bg: "rgba(220,38,38,0.20)",
-    border: "rgba(220,38,38,0.50)",
-    shadow: "#dc2626",
+    bg: "rgba(255,59,48,0.20)",
+    border: "rgba(255,59,48,0.50)",
+    shadow: "#FF3B30",
   },
   success: {
     bg: "rgba(34,197,94,0.18)",
@@ -58,6 +63,8 @@ const CustomButton = ({
   IconLeft,
   IconRight,
   className,
+  loading = false,
+  disabled,
   ...props
 }: ButtonProps) => {
   const handlePress = (e: any) => {
@@ -67,11 +74,13 @@ const CustomButton = ({
 
   const glass = GLASS_STYLES[bgVariant ?? "primary"] ?? GLASS_STYLES.primary;
   const textColor = getTextColor(textVariant);
+  const isDisabled = disabled || loading;
 
   return (
     <TouchableOpacity
       onPress={handlePress}
       activeOpacity={0.72}
+      disabled={isDisabled}
       style={[
         styles.button,
         {
@@ -79,12 +88,19 @@ const CustomButton = ({
           borderColor: glass.border,
           shadowColor: glass.shadow,
         },
+        isDisabled && styles.disabled,
       ]}
       {...props}
     >
-      {IconLeft && <IconLeft />}
-      <Text style={[styles.label, { color: textColor }]}>{title}</Text>
-      {IconRight && <IconRight />}
+      {loading ? (
+        <ActivityIndicator color={textColor} />
+      ) : (
+        <>
+          {IconLeft && <IconLeft />}
+          <Text style={[styles.label, { color: textColor }]}>{title}</Text>
+          {IconRight && <IconRight />}
+        </>
+      )}
     </TouchableOpacity>
   );
 };
@@ -103,6 +119,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 14,
     elevation: 5,
+  },
+  disabled: {
+    opacity: 0.5,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   label: {
     fontSize: 18,

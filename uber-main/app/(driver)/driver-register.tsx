@@ -385,7 +385,12 @@ export default function DriverRegisterScreen() {
 
   const renderHeader = (title: string) => (
     <View style={styles.header}>
-      <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+      <TouchableOpacity
+        onPress={handleBack}
+        style={styles.backBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+      >
         <Ionicons name="close" size={24} color="#FFF" />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{title}</Text>

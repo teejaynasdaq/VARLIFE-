@@ -96,7 +96,11 @@ export default function SignUp() {
       >
         <View className="flex-1 bg-black px-8 py-10 min-h-screen">
           <View className="flex-row items-center mt-10 mb-16">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
               <Ionicons name="chevron-back" size={24} color="white" />
             </TouchableOpacity>
             <Text className="text-white text-xl font-JakartaExtraBold tracking-[4px] absolute left-0 right-0 text-center">
@@ -145,9 +149,9 @@ export default function SignUp() {
           />
 
           <CustomButton
-            title={loading ? "Creating Account..." : "Create Account"}
+            title="Create Account"
             onPress={onSignUpPress}
-            disabled={loading}
+            loading={loading}
             className="mt-4"
           />
 

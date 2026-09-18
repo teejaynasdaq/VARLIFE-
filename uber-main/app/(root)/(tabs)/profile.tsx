@@ -146,6 +146,8 @@ const Profile = () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             router.back();
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="chevron-back" size={28} color="white" />
         </TouchableOpacity>
@@ -341,7 +343,11 @@ const Profile = () => {
               <Text className="text-white text-xl font-JakartaBold">
                 Edit Profile
               </Text>
-              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+              <TouchableOpacity
+                onPress={() => setIsEditModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+              >
                 <Ionicons name="close" size={24} color="white" />
               </TouchableOpacity>
             </View>

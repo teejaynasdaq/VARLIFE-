@@ -135,12 +135,16 @@ const DriverCard = ({
           <View className="flex-row items-center gap-2">
             <TouchableOpacity
               onPress={handleShare}
+              accessibilityRole="button"
+              accessibilityLabel="Share trip details"
               className="w-10 h-10 rounded-full bg-[#1E1E1E] border border-[#2A2A2A] items-center justify-center"
             >
               <Ionicons name="share-social" size={16} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleCall}
+              accessibilityRole="button"
+              accessibilityLabel="Call driver"
               className="w-10 h-10 rounded-full bg-[#1E1E1E] border border-[#2A2A2A] items-center justify-center"
             >
               <Ionicons name="call" size={16} color="white" />
@@ -148,6 +152,8 @@ const DriverCard = ({
             <TouchableOpacity
               onPress={handleMessage}
               disabled={!rideId}
+              accessibilityRole="button"
+              accessibilityLabel="Message driver"
               className="w-10 h-10 rounded-full bg-[#1E1E1E] border border-[#2A2A2A] items-center justify-center"
             >
               <Ionicons name="chatbubble" size={16} color="white" />

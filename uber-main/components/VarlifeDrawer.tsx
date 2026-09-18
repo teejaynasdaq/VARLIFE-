@@ -212,9 +212,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   logoutBtn: {
-    backgroundColor: "rgba(220,38,38,0.10)",
+    backgroundColor: "rgba(255,59,48,0.10)",
     borderWidth: 1,
-    borderColor: "rgba(220,38,38,0.30)",
+    borderColor: "rgba(255,59,48,0.30)",
     paddingVertical: 12,
     borderRadius: 999,
     alignItems: "center",

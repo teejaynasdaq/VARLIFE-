@@ -54,6 +54,8 @@ const CourierScreen = () => {
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-10 h-10 bg-dark-100 rounded-full items-center justify-center border border-neutral-900"
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="arrow-back" size={20} color="white" />
         </TouchableOpacity>

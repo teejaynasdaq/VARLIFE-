@@ -69,7 +69,12 @@ export function ImagePreview({
   return (
     <View style={styles.imagePreviewContainer}>
       <Image source={{ uri }} style={styles.imagePreview} />
-      <TouchableOpacity style={styles.removeImageBtn} onPress={onRemove}>
+      <TouchableOpacity
+        style={styles.removeImageBtn}
+        onPress={onRemove}
+        accessibilityRole="button"
+        accessibilityLabel="Remove image"
+      >
         <Ionicons name="close" size={16} color="white" />
       </TouchableOpacity>
     </View>
@@ -138,7 +143,7 @@ export function ValidationMessage({
 }) {
   if (!message) return null;
   const color =
-    type === "error" ? "#FF4D4D" : type === "warning" ? "#FFA500" : "#60A5FA";
+    type === "error" ? "#FF3B30" : type === "warning" ? "#FFA500" : "#1C6EF2";
   return (
     <View style={styles.validationContainer}>
       <Ionicons name="information-circle-outline" size={14} color={color} />
@@ -161,7 +166,7 @@ export function PasswordStrengthBar({ password }: { password: string }) {
   const score = calculateStrength();
   const getBarColor = (index: number) => {
     if (score === 0) return "#333";
-    if (score < 2) return index === 0 ? "#FF4D4D" : "#333"; // Weak
+    if (score < 2) return index === 0 ? "#FF3B30" : "#333"; // Weak
     if (score < 4) return index < 2 ? "#FFA500" : "#333"; // Medium
     return index < 4 ? "#34D399" : "#333"; // Strong
   };

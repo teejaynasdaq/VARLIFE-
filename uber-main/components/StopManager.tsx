@@ -85,6 +85,8 @@ const StopManager = () => {
               <TouchableOpacity
                 onPress={() => setShowSearch(false)}
                 className="bg-neutral-900 p-2 rounded-full"
+                accessibilityRole="button"
+                accessibilityLabel="Close"
               >
                 <Ionicons name="close" size={20} color="white" />
               </TouchableOpacity>

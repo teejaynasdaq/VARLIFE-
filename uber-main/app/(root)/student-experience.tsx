@@ -249,7 +249,12 @@ export default function StudentExperience() {
 
   const Header = ({ title }: { title: string }) => (
     <View className="px-5 pt-2 flex-row items-center mb-6">
-      <TouchableOpacity onPress={() => router.back()} className="mr-4">
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="mr-4"
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
         <Ionicons name="chevron-back" size={28} color="white" />
       </TouchableOpacity>
       <Text className="text-white text-xl font-JakartaExtraBold tracking-[2px]">
@@ -512,7 +517,12 @@ export default function StudentExperience() {
     <SafeAreaView className="flex-1 bg-black">
       <View className="px-5 pt-2 pb-4 flex-row items-center justify-between border-b border-white/5">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mr-4"
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-xl font-JakartaExtraBold tracking-[2px]">

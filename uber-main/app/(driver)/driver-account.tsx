@@ -127,7 +127,12 @@ export default function DriverAccountScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.closeBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Driver Account</Text>
@@ -321,7 +326,7 @@ const styles = StyleSheet.create({
   switchBtnText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#60A5FA",
+    color: "#1C6EF2",
     marginLeft: 4,
   },
   profileSection: {
@@ -455,5 +460,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#4A1111",
   },
-  signOutText: { color: "#FF4D4D", fontSize: 15, fontWeight: "700" },
+  signOutText: { color: "#FF3B30", fontSize: 15, fontWeight: "700" },
 });

@@ -118,6 +118,12 @@ const EmergencyButton = () => {
       <TouchableOpacity
         onPress={isEmergencyActive ? stopRecording : triggerEmergency}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isEmergencyActive
+            ? "Emergency active. Tap to stop."
+            : "Trigger emergency alert"
+        }
       >
         <Animated.View
           style={[
@@ -147,9 +153,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   recordingPill: {
-    backgroundColor: "rgba(220,38,38,0.55)",
+    backgroundColor: "rgba(255,59,48,0.55)",
     borderWidth: 1,
-    borderColor: "rgba(220,38,38,0.8)",
+    borderColor: "rgba(255,59,48,0.8)",
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 999,
@@ -184,14 +190,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   emergencyBtnInactive: {
-    backgroundColor: "rgba(220,38,38,0.75)",
+    backgroundColor: "rgba(255,59,48,0.75)",
     borderColor: "rgba(255,80,80,0.90)",
-    shadowColor: "#dc2626",
+    shadowColor: "#FF3B30",
   },
   emergencyBtnActive: {
     backgroundColor: "rgba(0,0,0,0.65)",
-    borderColor: "rgba(220,38,38,0.90)",
-    shadowColor: "#dc2626",
+    borderColor: "rgba(255,59,48,0.90)",
+    shadowColor: "#FF3B30",
   },
   label: {
     color: "white",

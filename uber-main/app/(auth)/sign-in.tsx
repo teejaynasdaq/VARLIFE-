@@ -96,7 +96,11 @@ const SignIn = () => {
       >
         <View className="flex-1 bg-black px-8 py-10 min-h-screen">
           <View className="flex flex-row justify-between items-center mt-10 mb-16">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
               <Ionicons name="chevron-back" size={24} color="white" />
             </TouchableOpacity>
             <Text className="text-white text-xl font-JakartaExtraBold tracking-[4px] absolute left-0 right-0 text-center -z-10">
@@ -147,9 +151,9 @@ const SignIn = () => {
             </TouchableOpacity>
 
             <CustomButton
-              title={loading ? "Signing In..." : "Sign In"}
+              title="Sign In"
               onPress={onSignInPress}
-              disabled={loading}
+              loading={loading}
             />
 
             <OAuth />

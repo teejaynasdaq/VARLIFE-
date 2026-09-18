@@ -79,7 +79,12 @@ const RideRequestModal = ({
               <Text style={styles.newTagText}>NEW REQUEST</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeButton}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss ride request"
+          >
             <Ionicons name="close" size={22} color="black" />
           </TouchableOpacity>
         </View>
@@ -290,7 +295,7 @@ const styles = StyleSheet.create({
   },
   negotiatedText: {
     fontSize: 12,
-    color: "#60A5FA", // blue
+    color: "#1C6EF2", // blue
     fontWeight: "600",
     marginLeft: 4,
   },
@@ -365,7 +370,7 @@ const styles = StyleSheet.create({
   negotiateInputLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#60A5FA",
+    color: "#1C6EF2",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -443,7 +448,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(59,130,246,0.8)",
   },
   negotiateText: {
-    color: "#60A5FA",
+    color: "#1C6EF2",
     fontSize: 14,
     fontWeight: "600",
   },

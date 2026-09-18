@@ -124,6 +124,8 @@ const Chat = () => {
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-10 h-10 bg-neutral-900 rounded-full items-center justify-center border border-neutral-800"
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="arrow-back" size={20} color="white" />
         </TouchableOpacity>
