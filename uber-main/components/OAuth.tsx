@@ -17,9 +17,9 @@ const OAuth = () => {
 
   // Expo Auth Session Google Sign In hook setup
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: "google-ios-client-id-placeholder",
-    androidClientId: "google-android-client-id-placeholder",
-    webClientId: "370761195543-tg70f9bd3r9h2sj5ig2vvh841dea1hb4.apps.googleusercontent.com",
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || "",
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "370761195543-tg70f9bd3r9h2sj5ig2vvh841dea1hb4.apps.googleusercontent.com",
     redirectUri: AuthSession.makeRedirectUri({
       scheme: "varlife",
       path: "oauth-callback",
@@ -49,7 +49,7 @@ const OAuth = () => {
       // Direct Apple provider initialization
       const provider = new OAuthProvider("apple.com");
       // Since Apple Sign In requires native configuration, we use standard error handling or fallback
-      Alert.alert("Apple Sign-In", "Apple Sign-In is configured for production builds.");
+      Alert.alert("Apple Sign-In", "Not enabled yet. Use email/password for now.");
     } catch (err: any) {
       console.error("[OAuth] Apple Sign-In Error:", err);
       Alert.alert(

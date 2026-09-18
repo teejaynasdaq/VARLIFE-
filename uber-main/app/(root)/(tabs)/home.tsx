@@ -63,7 +63,7 @@ const Home = () => {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [negotiatedPrice, setNegotiatedPrice] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "payshap">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "yoco" | "payshap">("cash");
   const [step, setStep] = useState<
     "search" | "booking" | "searching" | "driver_assigned" | "in_trip"
   >("search");

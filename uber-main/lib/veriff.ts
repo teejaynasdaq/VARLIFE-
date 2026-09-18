@@ -1,5 +1,9 @@
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+/** Set EXPO_PUBLIC_VERIFF_ENABLED=true in .env when Cloud Functions are ready for production. */
+export const VERIFF_ENABLED =
+  process.env.EXPO_PUBLIC_VERIFF_ENABLED === "true";
 
 export type DriverVerificationStatus =
   | "pending"
@@ -30,7 +34,9 @@ export const VERIFICATION_STATUS_LABELS: Record<
 > = {
   pending: {
     title: "Verification Required",
-    message: "Submit your driver licence to begin automated verification.",
+    message: VERIFF_ENABLED
+      ? "Submit your driver licence to begin automated verification."
+      : "Veriff is disabled for testing. You can go online after registration.",
     icon: "document-text-outline",
     color: "#888",
   },
@@ -38,7 +44,7 @@ export const VERIFICATION_STATUS_LABELS: Record<
     title: "Verification In Progress",
     message: "We're verifying your licence with Veriff. This usually takes a few minutes.",
     icon: "hourglass-outline",
-    color: "#1C6EF2",
+    color: "#FFFFFF",
   },
   verified: {
     title: "Licence Verified",
@@ -48,21 +54,21 @@ export const VERIFICATION_STATUS_LABELS: Record<
   },
   rejected: {
     title: "Verification Declined",
-    message: "Your licence could not be verified. Please upload clearer photos and try again.",
+    message: "Please re-submit clearer licence photos.",
     icon: "close-circle",
-    color: "#FF3B30",
+    color: "#F56565",
   },
   expired: {
-    title: "Session Expired",
-    message: "Your verification session expired. Please submit again.",
+    title: "Verification Expired",
+    message: "Please start verification again.",
     icon: "time-outline",
-    color: "#FF9500",
+    color: "#888",
   },
   failed: {
     title: "Verification Failed",
-    message: "We couldn't complete verification. Check your images and try again.",
+    message: "Something went wrong. Please try again later.",
     icon: "alert-circle",
-    color: "#FF9500",
+    color: "#F56565",
   },
 };
 
@@ -71,10 +77,13 @@ export function isVerificationComplete(status: DriverVerificationStatus): boolea
 }
 
 export function canDriverGoOnline(driver: DriverVerificationRecord | null): boolean {
-  return !!driver?.is_verified && driver.verification_status === "verified";
+  if (!driver) return false;
+  if (driver.verification_status === "rejected") return false;
+  // Testing: Veriff off — allow online once a driver profile exists
+  if (!VERIFF_ENABLED) return true;
+  return !!driver.is_verified && driver.verification_status === "verified";
 }
 
-/** Read a local image URI as base64 for Veriff upload. */
 export async function imageUriToBase64(uri: string): Promise<string> {
   if (uri.startsWith("data:")) {
     const comma = uri.indexOf(",");
@@ -100,7 +109,7 @@ export async function getDriverVerification(
   try {
     const snap = await getDoc(doc(db, "drivers", driverId));
     if (!snap.exists()) return null;
-    return snap.data() as DriverVerificationRecord;
+    return { id: snap.id, ...(snap.data() as any) } as DriverVerificationRecord;
   } catch (err) {
     console.error("[getDriverVerification]", err);
     return null;
@@ -116,58 +125,61 @@ export async function startVeriffVerification(params: {
   licenseExpiry?: string;
   licenseFrontUri: string;
   licenseBackUri?: string;
-}): Promise<{ sessionId: string; status: string }> {
-  const licenseFrontBase64 = await imageUriToBase64(params.licenseFrontUri);
-  let licenseBackBase64: string | undefined;
-  if (params.licenseBackUri) {
-    licenseBackBase64 = await imageUriToBase64(params.licenseBackUri);
+}): Promise<{ sessionId: string; status: string; skipped?: boolean }> {
+  // --- PRODUCTION VERIFF (commented out until Cloud Functions are ready) ---
+  // const licenseFrontBase64 = await imageUriToBase64(params.licenseFrontUri);
+  // let licenseBackBase64: string | undefined;
+  // if (params.licenseBackUri) {
+  //   licenseBackBase64 = await imageUriToBase64(params.licenseBackUri);
+  // }
+  // const functionUrl = `https://us-central1-${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/veriffStartVerification`;
+  // const response = await fetch(functionUrl, {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ ...params fields + base64 }),
+  // });
+  // const data = await response.json();
+  // if (!response.ok || data.error) throw new Error(data.error || "Veriff start failed");
+  // return data;
+
+  if (VERIFF_ENABLED) {
+    throw new Error(
+      "Veriff is flagged enabled but Cloud Functions are not wired yet. Set EXPO_PUBLIC_VERIFF_ENABLED=false or deploy functions.",
+    );
   }
 
-  // Point to Firebase Cloud Function (HTTPS Trigger)
-  const functionUrl = `https://us-central1-${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/veriffStartVerification`;
-  
-  const response = await fetch(functionUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      driverId: params.driverId,
-      firstName: params.firstName,
-      lastName: params.lastName,
-      idNumber: params.idNumber,
-      licenseNumber: params.licenseNumber,
-      licenseExpiry: params.licenseExpiry,
-      licenseFrontBase64,
-      licenseBackBase64,
-    }),
+  // Testing bypass: mark driver verified locally in Firestore
+  const now = new Date().toISOString();
+  await updateDoc(doc(db, "drivers", params.driverId), {
+    is_verified: true,
+    is_approved: true,
+    verification_status: "verified",
+    verification_provider: "manual_test_bypass",
+    veriff_session_id: null,
+    license_number: params.licenseNumber,
+    verified_at: now,
+    verification_completed_at: now,
+    last_verification_update: now,
+    updated_at: now,
   });
 
-  const data = await response.json();
-  if (!response.ok || data.error) {
-    throw new Error(data.error || "Failed to start verification via Firebase Functions");
-  }
-  return data;
+  return { sessionId: "test-bypass", status: "verified", skipped: true };
 }
 
 export async function pollVeriffStatus(
   sessionId: string,
 ): Promise<{ status: DriverVerificationStatus; reason: string | null }> {
-  // Point to Firebase Cloud Function (HTTPS Trigger)
-  const functionUrl = `https://us-central1-${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/veriffPollStatus`;
+  // --- PRODUCTION VERIFF (commented out until Cloud Functions are ready) ---
+  // const functionUrl = `https://us-central1-${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/veriffPollStatus`;
+  // const response = await fetch(functionUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId }) });
+  // const data = await response.json();
+  // if (!response.ok || data.error) throw new Error(data.error || "Veriff poll failed");
+  // return { status: data.status, reason: data.reason ?? null };
 
-  const response = await fetch(functionUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId }),
-  });
-
-  const data = await response.json();
-  if (!response.ok || data.error) {
-    throw new Error(data.error || "Failed to check verification status via Firebase Functions");
+  if (!VERIFF_ENABLED) {
+    return { status: "verified", reason: null };
   }
-  return {
-    status: data.status as DriverVerificationStatus,
-    reason: data.reason ?? null,
-  };
+  throw new Error("Veriff polling requires deployed Cloud Functions.");
 }
 
 export function subscribeToDriverVerification(
@@ -175,11 +187,9 @@ export function subscribeToDriverVerification(
   onUpdate: (driver: DriverVerificationRecord) => void,
 ) {
   const docRef = doc(db, "drivers", driverId);
-  const unsubscribe = onSnapshot(docRef, (docSnap) => {
+  return onSnapshot(docRef, (docSnap) => {
     if (docSnap.exists()) {
-      onUpdate(docSnap.data() as DriverVerificationRecord);
+      onUpdate({ id: docSnap.id, ...(docSnap.data() as any) } as DriverVerificationRecord);
     }
   });
-
-  return unsubscribe;
 }

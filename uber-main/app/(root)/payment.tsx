@@ -8,11 +8,17 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/context/AuthContext";
 import { getPaymentHistory } from "@/lib/supabase";
+import {
+  createYocoCheckout,
+  openYocoCheckout,
+  recordYocoPaymentIntent,
+} from "@/lib/yoco";
 
 const PAYMENT_METHODS = [
   { id: "cash", label: "Cash", icon: "cash-outline", active: true },
@@ -31,12 +37,14 @@ export default function PaymentScreen() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMethod, setSelectedMethod] = useState("cash");
+  const [testAmount, setTestAmount] = useState("50");
+  const [paying, setPaying] = useState(false);
 
   const loadPayments = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const history = await getPaymentHistory(user.clerk_id ?? user.id);
+      const history = await getPaymentHistory(user.id);
       setPayments(history);
     } catch {
       setPayments([]);
@@ -53,6 +61,42 @@ export default function PaymentScreen() {
     .filter((p) => p.status === "SUCCESS" || p.status === "paid")
     .reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
 
+
+  const payWithYoco = async () => {
+    if (!user?.id) return;
+    const amountZar = Number(testAmount);
+    if (!Number.isFinite(amountZar) || amountZar < 2) {
+      Alert.alert("Amount", "Enter at least R2.00 for a Yoco test checkout.");
+      return;
+    }
+    setPaying(true);
+    try {
+      const checkout = await createYocoCheckout({
+        amountZar,
+        userId: user.id,
+        description: "VARLIFE test payment",
+      });
+      await recordYocoPaymentIntent({
+        userId: user.id,
+        amountZar,
+        checkoutId: checkout.checkoutId,
+      });
+      await openYocoCheckout(checkout.redirectUrl);
+      await loadPayments();
+      Alert.alert(
+        "Yoco opened",
+        "Complete the test card payment in the browser. In production, confirm via Yoco webhooks.",
+      );
+    } catch (err: any) {
+      Alert.alert(
+        "Yoco unavailable",
+        err?.message ||
+          "Start: YOCO_SECRET_KEY=sk_test_... node scripts/yoco-checkout-server.mjs",
+      );
+    } finally {
+      setPaying(false);
+    }
+  };
   return (
     <SafeAreaView className="flex-1 bg-black">
       <View className="px-5 pt-2 flex-row items-center mb-6">
@@ -89,7 +133,7 @@ export default function PaymentScreen() {
               key={method.id}
               className="flex-row items-center justify-between px-5 py-5 border-b border-white/5"
               onPress={() => {
-                if (!method.active && method.id !== "cash") {
+                if (!method.active) {
                   Alert.alert(
                     "Coming Soon",
                     `${method.label} will be available in a future update.`,
@@ -116,6 +160,37 @@ export default function PaymentScreen() {
           ))}
         </View>
 
+        {selectedMethod === "yoco" ? (
+          <View className="bg-dark-100/90 p-5 rounded-[32px] border border-white/5 mb-8">
+            <Text className="text-white font-JakartaBold mb-2">
+              Test Yoco checkout
+            </Text>
+            <Text className="text-neutral-500 text-xs font-JakartaMedium mb-4 leading-5">
+              Uses your Yoco sk_test key via the local proxy. Never put the secret in the app.
+            </Text>
+            <TextInput
+              value={testAmount}
+              onChangeText={setTestAmount}
+              keyboardType="decimal-pad"
+              placeholder="50.00"
+              placeholderTextColor="#555"
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl px-4 py-4 text-white font-JakartaMedium mb-4"
+            />
+            <TouchableOpacity
+              className={`w-full py-4 rounded-full items-center ${paying ? "bg-neutral-800" : "bg-white"}`}
+              onPress={payWithYoco}
+              disabled={paying}
+            >
+              {paying ? (
+                <ActivityIndicator color="black" />
+              ) : (
+                <Text className="text-black font-JakartaBold text-base">
+                  Pay with Yoco
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <Text className="text-neutral-600 text-[10px] font-JakartaBold uppercase tracking-widest mb-4">
           Transaction History
         </Text>
