@@ -21,13 +21,13 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow create, update: if isOwner(userId);
       allow delete: if false;
     }
 
     match /drivers/{driverId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow create, update: if isOwner(driverId);
       allow delete: if false;
     }

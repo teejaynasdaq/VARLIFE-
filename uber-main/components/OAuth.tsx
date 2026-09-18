@@ -24,9 +24,10 @@ const OAuth = () => {
 
   // Expo Auth Session Google Sign In hook setup
   const [request, , promptAsync] = Google.useAuthRequest({
-    iosClientId: "google-ios-client-id-placeholder",
-    androidClientId: "google-android-client-id-placeholder",
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || "",
     webClientId:
+      process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
       "370761195543-tg70f9bd3r9h2sj5ig2vvh841dea1hb4.apps.googleusercontent.com",
     redirectUri: AuthSession.makeRedirectUri({
       scheme: "varlife",
@@ -58,7 +59,7 @@ const OAuth = () => {
       // until that's wired up for production builds.
       Alert.alert(
         "Apple Sign-In",
-        "Apple Sign-In is configured for production builds.",
+        "Not enabled yet. Use email/password for now.",
       );
     } catch (err: any) {
       console.error("[OAuth] Apple Sign-In Error:", err);
