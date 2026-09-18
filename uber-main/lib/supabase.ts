@@ -65,6 +65,8 @@ export const ensureStorageBucket = async (bucketName: string): Promise<boolean> 
 class SupabaseQueryBuilder {
   private collectionName: string;
   private filters: { field: string; operator: string; value: any }[] = [];
+  private pendingUpdate: any | null = null;
+  private pendingDelete = false;
   private limitVal?: number;
   private orderField?: string;
   private orderAscending = true;
@@ -90,6 +92,45 @@ class SupabaseQueryBuilder {
     }
     return this;
   }
+  gte(field: string, value: any) {
+    this.filters.push({ field, operator: ">=", value });
+    return this;
+  }
+
+  gt(field: string, value: any) {
+    this.filters.push({ field, operator: ">", value });
+    return this;
+  }
+
+  lte(field: string, value: any) {
+    this.filters.push({ field, operator: "<=", value });
+    return this;
+  }
+
+  lt(field: string, value: any) {
+    this.filters.push({ field, operator: "<", value });
+    return this;
+  }
+
+  neq(field: string, value: any) {
+    this.filters.push({ field, operator: "!=", value });
+    return this;
+  }
+
+  is(field: string, value: any) {
+    this.filters.push({ field, operator: "==", value });
+    return this;
+  }
+
+  not(field: string, operator: string, value: any) {
+    if (operator === "is" && (value === null || value === "null")) {
+      this.filters.push({ field, operator: "!=", value: null });
+    } else if (operator === "eq") {
+      this.filters.push({ field, operator: "!=", value });
+    }
+    return this;
+  }
+
 
   in(field: string, values: any[]) {
     this.filters.push({ field, operator: "in", value: values });
@@ -133,7 +174,7 @@ class SupabaseQueryBuilder {
         q = query(q, limit(this.limitVal));
       }
       const snap = await getDocs(q);
-      const results = snap.docs.map(docObj => ({ id: docObj.id, ...docObj.data() }));
+      const results: any[] = snap.docs.map(docObj => ({ id: docObj.id, ...docObj.data() }));
       return { data: results, error: null };
     } catch (err: any) {
       console.error("[Firestore Compat Builder] Query execution error:", err);
@@ -142,6 +183,12 @@ class SupabaseQueryBuilder {
   }
 
   then(onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) {
+    if (this.pendingDelete) {
+      return this.runDelete().then(onfulfilled, onrejected);
+    }
+    if (this.pendingUpdate) {
+      return this.runUpdate(this.pendingUpdate).then(onfulfilled, onrejected);
+    }
     return this.execute().then(onfulfilled, onrejected);
   }
 
@@ -172,11 +219,21 @@ class SupabaseQueryBuilder {
     }
   }
 
-  async upsert(data: any | any[]) {
+  async upsert(data: any | any[], _opts?: any) {
     return this.insert(data);
   }
 
-  async update(data: any) {
+  update(data: any) {
+    this.pendingUpdate = data;
+    return this;
+  }
+
+  delete() {
+    this.pendingDelete = true;
+    return this;
+  }
+
+  private async runUpdate(data: any) {
     try {
       const results = await this.execute();
       if (results.data) {
@@ -192,7 +249,7 @@ class SupabaseQueryBuilder {
     }
   }
 
-  async delete() {
+  private async runDelete() {
     try {
       const results = await this.execute();
       if (results.data) {

@@ -15,7 +15,6 @@
   ],
   "exclude": [
     "node_modules",
-    "omatsoladev-ubar-driver-app-main",
     "supabase/functions"
   ]
 }

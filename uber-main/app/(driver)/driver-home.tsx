@@ -241,7 +241,7 @@ export default function DriverHomeScreen() {
 
       if (completed) {
         const sum = completed.reduce(
-          (acc, t) => acc + (t.driver_payout ?? t.final_price ?? 0),
+          (acc: number, t: any) => acc + (t.driver_payout ?? t.final_price ?? 0),
           0,
         );
         setTodayEarnings(sum);
